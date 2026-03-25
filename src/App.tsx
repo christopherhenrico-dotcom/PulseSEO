@@ -51,13 +51,13 @@ import { motion, AnimatePresence } from 'motion/react';
 import Markdown from 'react-markdown';
 import html2pdf from 'html2pdf.js';
 import { WhiteLabelSettings, BusinessInfo, AuditResult, Client, AnalysisResult } from './types';
-import { analyzeBusiness } from './services/geminiService';
+import { analyzeBusiness } from './services/seoService';
 
 const DEFAULT_SETTINGS: WhiteLabelSettings = {
-  brandName: 'LocalPulse AI',
+  brandName: 'PulseSEO',
   primaryColor: '#000000',
-  supportEmail: 'support@localpulse.ai',
-  website: 'https://localpulse.ai'
+  supportEmail: 'support@pulseseo.com',
+  website: 'https://pulseseo.com'
 };
 
 const DEFAULT_CLIENT: Client = {
@@ -640,7 +640,7 @@ export default function App() {
           {isAnalyzing ? (
             <>
               <Loader2 className="animate-spin" size={20} />
-              <span>Analyzing with AI...</span>
+              <span>Scanning website & analyzing with AI...</span>
             </>
           ) : (
             <>
@@ -1063,7 +1063,6 @@ Joe's Pizza | Restaurant | Los Angeles, CA`}
           <div className="p-12 bg-gray-50 border-t border-gray-100 flex flex-col md:flex-row justify-between items-center gap-6 text-sm text-gray-400">
             <div className="flex items-center gap-2">
               <span className="font-semibold" style={{ color: settings.primaryColor }}>{settings.brandName}</span>
-              <span>• Powered by LocalPulse AI</span>
             </div>
             <div className="flex items-center gap-6">
               <a href={`mailto:${settings.supportEmail}`} className="hover:text-black transition-colors">{settings.supportEmail}</a>
