@@ -3,13 +3,15 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { GoogleGenAI, Type } from "@google/genai";
+import { GoogleGenerativeAI } from "@google/generative-ai";
 import { BusinessInfo } from "../types";
 
-const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY || "" });
+const API_KEY = import.meta.env.VITE_GEMINI_API_KEY || "";
+
+const ai = new GoogleGenerativeAI(API_KEY);
 
 export async function analyzeBusiness(business: BusinessInfo) {
-  const model = "gemini-3-flash-preview";
+  const model = ai.getGenerativeModel({ model: "gemini-2.0-flash" });
   
   const prompt = `
     Perform a comprehensive Local SEO and Google My Business (GMB) audit for the following business:
@@ -28,38 +30,9 @@ export async function analyzeBusiness(business: BusinessInfo) {
     6. reviewResponses: (array of 2 example reviews and professional AI-generated responses)
   `;
 
-  const response = await ai.models.generateContent({
-    model,
-    contents: prompt,
-    config: {
-      responseMimeType: "application/json",
-      responseSchema: {
-        type: Type.OBJECT,
-        properties: {
-          seoScore: { type: Type.NUMBER },
-          gmbOptimized: { type: Type.BOOLEAN },
-          recommendations: { type: Type.STRING },
-          suggestedDescription: { type: Type.STRING },
-          suggestedPosts: {
-            type: Type.ARRAY,
-            items: { type: Type.STRING }
-          },
-          reviewResponses: {
-            type: Type.ARRAY,
-            items: {
-              type: Type.OBJECT,
-              properties: {
-                review: { type: Type.STRING },
-                response: { type: Type.STRING }
-              },
-              required: ["review", "response"]
-            }
-          }
-        },
-        required: ["seoScore", "gmbOptimized", "recommendations", "suggestedDescription", "suggestedPosts", "reviewResponses"]
-      }
-    }
-  });
+  const result = await model.generateContent(prompt);
+  const response = result.response;
+  const text = response.text();
 
-  return JSON.parse(response.text || "{}");
+  return JSON.parse(text || "{}");
 }
