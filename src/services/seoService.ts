@@ -3,11 +3,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { pipeline, env } from '@huggingface/transformers';
 import { BusinessInfo, AnalysisResult, FrameworkInfo, ScrapingQuality } from "../types";
-
-env.allowLocalModels = false;
-env.useBrowserCache = true;
+import { aiService, SEOAnalysisInput, AIReportResult, ScrapedDataForAI } from "./aiService";
 
 interface FrameworkDetector {
   name: string;
@@ -541,7 +538,23 @@ function extractKeywordsFromContent(data: ScrapedSEOData): string[] {
     .map(([word]) => word);
 }
 
-export async function analyzeBusiness(business: BusinessInfo): Promise<AnalysisResult> {
+function convertToAIData(scrapedData: ScrapedSEOData): ScrapedDataForAI {
+  return {
+    title: scrapedData.title,
+    metaDescription: scrapedData.metaDescription,
+    h1Tags: scrapedData.h1Tags,
+    h2Tags: scrapedData.h2Tags,
+    keywords: scrapedData.keywords,
+    images: scrapedData.images,
+    internalLinks: scrapedData.internalLinks.length,
+    externalLinks: scrapedData.externalLinks.length,
+    wordCount: scrapedData.wordCount,
+    hasSchema: scrapedData.hasSchema,
+    ogTags: scrapedData.socialMeta
+  };
+}
+
+export async function analyzeBusiness(business: BusinessInfo, useAI: boolean = true): Promise<AnalysisResult> {
   const scrapedData = business.website ? await scrapeWebsite(business.website) : null;
   
   if (!scrapedData) {
@@ -565,8 +578,26 @@ export async function analyzeBusiness(business: BusinessInfo): Promise<AnalysisR
   }
   
   const seoScore = calculateRuleBasedScore(scrapedData);
-  const recommendations = generateRuleBasedRecommendations(scrapedData);
-  const keywords = extractKeywordsFromContent(scrapedData);
+  
+  let aiResult: AIReportResult | null = null;
+  let recommendations = generateRuleBasedRecommendations(scrapedData);
+  let keywords = extractKeywordsFromContent(scrapedData);
+  
+  if (useAI) {
+    try {
+      const aiInput: SEOAnalysisInput = {
+        business,
+        scrapedData: convertToAIData(scrapedData),
+        frameworkInfo: scrapedData.framework,
+        scrapingQuality: scrapedData.scrapingQuality
+      };
+      aiResult = await aiService.generateSEOReport(aiInput);
+      recommendations = aiResult.recommendations;
+      keywords = aiResult.keywords;
+    } catch (error) {
+      console.error('AI generation failed, using rule-based fallback:', error);
+    }
+  }
   
   const isGMBOptimized = 
     scrapedData.hasSchema && 
@@ -578,18 +609,18 @@ export async function analyzeBusiness(business: BusinessInfo): Promise<AnalysisR
     seoScore,
     gmbOptimized: isGMBOptimized,
     recommendations,
-    suggestedDescription: `${business.name} provides professional ${business.category} services in ${business.location}. With years of experience, we deliver quality solutions tailored to your needs. Contact us today for exceptional service.`,
-    suggestedPosts: [
+    suggestedDescription: aiResult?.suggestedDescription || `${business.name} provides professional ${business.category} services in ${business.location}. With years of experience, we deliver quality solutions tailored to your needs. Contact us today for exceptional service.`,
+    suggestedPosts: aiResult?.suggestedPosts || [
       `🎉 Welcome to ${business.name}! Your trusted ${business.category} expert in ${business.location}. We're here to serve all your needs!`,
       `📍 Located in the heart of ${business.location}, ${business.name} is dedicated to providing top-notch ${business.category} services. Visit us today!`,
       `⭐ Thank you for choosing ${business.name}! Your satisfaction is our priority. Review us on Google to help others discover our ${business.category} services in ${business.location}.`
     ],
-    reviewResponses: [
+    reviewResponses: aiResult?.reviewResponses || [
       { review: "Amazing service! Highly recommend.", response: "Thank you for the stellar review! We're delighted you had a great experience with us. We look forward to serving you again!" },
       { review: "Professional and timely. Will use again.", response: "We appreciate your feedback! It's great to know we met your expectations. Don't hesitate to reach out anytime you need our services." }
     ],
     keywords,
-    competitorInsights: "To outrank competitors: ensure complete Google Business Profile, respond to all reviews, post weekly, use relevant categories, add photos regularly, and maintain consistent NAP information across directories."
+    competitorInsights: aiResult?.competitorInsights || "To outrank competitors: ensure complete Google Business Profile, respond to all reviews, post weekly, use relevant categories, add photos regularly, and maintain consistent NAP information across directories."
   };
   
   if (scrapedData.framework) {
