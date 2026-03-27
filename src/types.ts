@@ -7,9 +7,12 @@ export interface WhiteLabelSettings {
   brandName: string;
   primaryColor: string;
   logoUrl?: string;
+  logoDimensions?: { width: number; height: number };
   supportEmail?: string;
   website?: string;
 }
+
+export type ThemeMode = 'light' | 'dark';
 
 export interface BusinessInfo {
   id?: string;
@@ -30,6 +33,19 @@ export interface AuditResult {
   clientId?: string;
 }
 
+export interface FrameworkInfo {
+  name: string;
+  confidence: number;
+  renderingMode: 'ssr' | 'ssg' | 'csr' | 'unknown';
+  detectedIndicators: string[];
+}
+
+export interface ScrapingQuality {
+  isComplete: boolean;
+  limitations: string[];
+  suggestedAction: string;
+}
+
 export interface AnalysisResult {
   seoScore: number;
   gmbOptimized: boolean;
@@ -42,6 +58,8 @@ export interface AnalysisResult {
   }[];
   keywords?: string[];
   competitorInsights?: string;
+  frameworkInfo?: FrameworkInfo;
+  scrapingQuality?: ScrapingQuality;
 }
 
 export interface Client {
