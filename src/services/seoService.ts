@@ -6,6 +6,24 @@
 import { BusinessInfo, AnalysisResult, FrameworkInfo, ScrapingQuality, SEOReportData, KeywordPerformance, DailyMetric, MonthlyTrend, LandingPageData, PageConversionData } from "../types";
 import { aiService, SEOAnalysisInput, AIReportResult, ScrapedDataForAI } from "./aiService";
 
+export interface PageSpeedData {
+  performanceScore: number;
+  lcp: number;
+  fid: number;
+  cls: number;
+  ttfb: number;
+  speedIndex: number;
+  seoScore: number;
+  accessibilityScore: number;
+  bestPracticesScore: number;
+  mobileUsability: string;
+  firstContentfulPaint: number;
+  largestContentfulPaint: number;
+  totalBlockingTime: number;
+  cumulativeLayoutShift: number;
+  speedRecommendations: string[];
+}
+
 interface FrameworkDetector {
   name: string;
   patterns: RegExp[];
@@ -235,21 +253,35 @@ export interface ScrapedSEOData {
 export async function scrapeWebsite(url: string): Promise<ScrapedSEOData | null> {
   if (!url) return null;
 
-  const scrapingServiceUrl = "https://chrome.browserless.io/scrape?url=";
+  const scrapingServices = [
+    "https://chrome.browserless.io/scrape?url=",
+    "https://r.jina.ai/http://",
+    "https://r.jina.ai/http://www."
+  ];
 
-  try {
-    const response = await fetch(`${scrapingServiceUrl}${encodeURIComponent(url)}`);
+  let lastError: Error | null = null;
 
-    if (!response.ok) {
-      throw new Error(`Failed to fetch from scraping service with status: ${response.status}`);
-    }
+  for (const baseUrl of scrapingServices) {
+    try {
+      const scrapeUrl = baseUrl + encodeURIComponent(url);
+      const response = await fetch(scrapeUrl, { 
+        signal: AbortSignal.timeout(15000) 
+      });
 
-    const jsonResponse = await response.json();
-    const html = jsonResponse.data[0].html;
+      if (!response.ok) {
+        throw new Error(`Scraping failed with status: ${response.status}`);
+      }
 
-    if (!html) {
-      throw new Error("Scraping service did not return HTML content.");
-    }
+      const jsonResponse = await response.json();
+      let html = jsonResponse.data?.[0]?.html || jsonResponse.content || "";
+
+      if (!html && typeof jsonResponse === 'string') {
+        html = jsonResponse;
+      }
+
+      if (!html) {
+        throw new Error("No HTML content returned");
+      }
     
     const parser = new DOMParser();
     const doc = parser.parseFromString(html, "text/html");
@@ -305,10 +337,96 @@ export async function scrapeWebsite(url: string): Promise<ScrapedSEOData | null>
       hasSchema,
       socialMeta: { ogTitle, ogDescription, ogImage },
       framework: frameworkInfo,
-      scrapingQuality
+        scrapingQuality
+      };
+    } catch (error) {
+      lastError = error as Error;
+      console.warn("Scraping service failed, trying next...", error);
+      continue;
+    }
+  }
+
+  console.error("All scraping services failed. Last error:", lastError);
+  return null;
+}
+
+export async function getPageSpeedData(url: string): Promise<PageSpeedData | null> {
+  if (!url) return null;
+
+  const apiUrl = `https://www.googleapis.com/pagespeedonline/v5/runPagespeed?url=${encodeURIComponent(url)}&key=AIzaSyBG8j2D6L6NmqKw5EwD6C2E6dNT3W1p7ZY&category=PERFORMANCE&category=SEO&category=ACCESSIBILITY&category=BEST_PRACTICES&strategy=MOBILE`;
+
+  try {
+    const response = await fetch(apiUrl, { signal: AbortSignal.timeout(30000) });
+    
+    if (!response.ok) {
+      console.warn("PageSpeed API returned:", response.status);
+      return null;
+    }
+
+    const data = await response.json();
+    
+    const lighthouse = data.lighthouseResult || {};
+    const metrics = lighthouse.audits || {};
+    
+    const getMetricValue = (id: string): number => {
+      const metric = metrics[id];
+      return metric?.numericValue || metric?.score * 100 || 0;
     };
+
+    const getScore = (category: string): number => {
+      return Math.round((lighthouse.categories?.[category]?.score || 0) * 100);
+    };
+
+    const recommendations: string[] = [];
+    const auditFindings = lighthouse.audits || {};
+    
+    if (auditFindings['render-blocking-resources']?.score < 1) {
+      recommendations.push('Eliminate render-blocking resources');
+    }
+    if (auditFindings['uses-optimized-images']?.score < 1) {
+      recommendations.push('Optimize images');
+    }
+    if (auditFindings['server-response-time']?.score < 1) {
+      recommendations.push('Reduce server response time (TTFB)');
+    }
+    if (auditFindings['unused-css-rules']?.score < 1) {
+      recommendations.push('Remove unused CSS');
+    }
+    if (auditFindings['javascript-runtime']?.score < 1) {
+      recommendations.push('Reduce JavaScript execution time');
+    }
+    if (auditFindings['meta-description']?.score < 1) {
+      recommendations.push('Add meta description');
+    }
+    if (auditFindings['document-title']?.score < 1) {
+      recommendations.push('Add document title');
+    }
+    if (auditFindings['tap-targets']?.score < 1) {
+      recommendations.push('Ensure tap targets are sized correctly');
+    }
+
+    const result: PageSpeedData = {
+      performanceScore: getScore('performance'),
+      lcp: getMetricValue('largest-contentful-paint'),
+      fid: getMetricValue('max-potential-fid'),
+      cls: getMetricValue('cumulative-layout-shift'),
+      ttfb: getMetricValue('server-response-time'),
+      speedIndex: getMetricValue('speed-index'),
+      seoScore: getScore('seo'),
+      accessibilityScore: getScore('accessibility'),
+      bestPracticesScore: getScore('best-practices'),
+      mobileUsability: lighthouse.categories?.['mobile-friendly']?.score === 1 ? 'Pass' : 'Fail',
+      firstContentfulPaint: getMetricValue('first-contentful-paint'),
+      largestContentfulPaint: getMetricValue('largest-contentful-paint'),
+      totalBlockingTime: getMetricValue('total-blocking-time'),
+      cumulativeLayoutShift: getMetricValue('cumulative-layout-shift'),
+      speedRecommendations: recommendations.slice(0, 5)
+    };
+
+    console.log("PageSpeed data retrieved:", result.performanceScore);
+    return result;
   } catch (error) {
-    console.error("Scraping failed:", error);
+    console.error("PageSpeed API failed:", error);
     return null;
   }
 }
@@ -563,6 +681,15 @@ function convertToAIData(scrapedData: ScrapedSEOData): ScrapedDataForAI {
 export async function analyzeBusiness(business: BusinessInfo, useAI: boolean = true): Promise<AnalysisResult> {
   const scrapedData = business.website ? await scrapeWebsite(business.website) : null;
   
+  let pageSpeedData = null;
+  if (business.website) {
+    try {
+      pageSpeedData = await getPageSpeedData(business.website);
+    } catch (e) {
+      console.warn("PageSpeed data unavailable:", e);
+    }
+  }
+  
   if (!scrapedData) {
     return {
       seoScore: 30,
@@ -637,7 +764,7 @@ export async function analyzeBusiness(business: BusinessInfo, useAI: boolean = t
     result.scrapingQuality = scrapedData.scrapingQuality;
   }
 
-  result.reportData = generateSEOReportData(business, scrapedData, seoScore);
+  result.reportData = generateSEOReportData(business, scrapedData, seoScore, pageSpeedData);
   
   return result;
 }
@@ -762,7 +889,8 @@ function generatePageConversions(): PageConversionData[] {
 function generateSEOReportData(
   business: BusinessInfo,
   scrapedData: ScrapedSEOData | null,
-  seoScore: number
+  seoScore: number,
+  pageSpeedData: PageSpeedData | null
 ): SEOReportData {
   const now = new Date();
   const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
@@ -950,6 +1078,23 @@ function generateSEOReportData(
       suggestedPosts: [],
       reviewResponses: [],
       competitorInsights: ''
-    }
+    },
+    pageSpeed: pageSpeedData ? {
+      performanceScore: pageSpeedData.performanceScore,
+      lcp: pageSpeedData.lcp,
+      fid: pageSpeedData.fid,
+      cls: pageSpeedData.cls,
+      ttfb: pageSpeedData.ttfb,
+      speedIndex: pageSpeedData.speedIndex,
+      seoScore: pageSpeedData.seoScore,
+      accessibilityScore: pageSpeedData.accessibilityScore,
+      bestPracticesScore: pageSpeedData.bestPracticesScore,
+      mobileUsability: pageSpeedData.mobileUsability,
+      firstContentfulPaint: pageSpeedData.firstContentfulPaint,
+      largestContentfulPaint: pageSpeedData.largestContentfulPaint,
+      totalBlockingTime: pageSpeedData.totalBlockingTime,
+      cumulativeLayoutShift: pageSpeedData.cumulativeLayoutShift,
+      speedRecommendations: pageSpeedData.speedRecommendations
+    } : undefined
   };
 }

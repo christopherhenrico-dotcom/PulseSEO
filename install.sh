@@ -28,24 +28,37 @@ mkdir -p "$INSTALL_DIR"
 echo "Copying files..."
 cp -r dist/* "$INSTALL_DIR/"
 
-# Make files executable
-chmod +x "$INSTALL_DIR/index.html" 2>/dev/null || true
+# Create launcher script that starts local server
+cat > "$INSTALL_DIR/pulseseo.sh" << 'EOF'
+#!/bin/bash
+cd "$(dirname "$0")"
+echo "Starting PulseSEO..."
+echo ""
+if command -v node &> /dev/null; then
+    npx -y serve -l 3000 &
+    sleep 3
+    xdg-open http://localhost:3000
+else
+    echo "Node.js not found. Please install Node.js from nodejs.org"
+    read -p "Press Enter to exit..."
+    exit 1
+fi
+EOF
+chmod +x "$INSTALL_DIR/pulseseo.sh"
 
 # Create desktop shortcut
 echo "Creating Desktop shortcut..."
-cat > "$DESKTOP_FILE" << 'EOF'
+cat > "$DESKTOP_FILE" << EOF
 [Desktop Entry]
 Version=1.0
 Type=Application
 Name=PulseSEO
 Comment=AI-Powered SEO Audit Platform
-Exec=xdg-open INSTALL_DIR_PLACEHOLDER/index.html
+Exec=$INSTALL_DIR/pulseseo.sh
 Icon=utilities-terminal
-Terminal=false
+Terminal=true
 Categories=Office;Utility;
 EOF
-
-sed -i "s|INSTALL_DIR_PLACEHOLDER|$INSTALL_DIR|g" "$DESKTOP_FILE"
 chmod +x "$DESKTOP_FILE"
 
 # Create application menu entry
@@ -55,9 +68,10 @@ cp "$DESKTOP_FILE" "$MENU_DIR/pulseseo.desktop"
 
 # Create uninstaller
 echo "Creating uninstaller..."
-cat > "$INSTALL_DIR/uninstall.sh" << EOF
+cat > "$INSTALL_DIR/uninstall.sh" << 'EOF'
 #!/bin/bash
 echo "Uninstalling PulseSEO..."
+pkill -f "serve -l 3000" 2>/dev/null || true
 rm -rf "$INSTALL_DIR"
 rm -f "$DESKTOP_FILE"
 rm -f "$MENU_DIR/pulseseo.desktop"
@@ -76,8 +90,8 @@ echo ""
 echo "A shortcut has been created on your Desktop."
 echo ""
 echo "To run PulseSEO:"
-echo "  1. Double-click the Desktop shortcut, OR"
-echo "  2. Open: $INSTALL_DIR/index.html in your browser"
+echo "  Double-click the Desktop shortcut"
+echo "  A browser will open automatically"
 echo ""
 echo "To uninstall:"
 echo "  $INSTALL_DIR/uninstall.sh"

@@ -91,6 +91,24 @@ export interface ScrapingQuality {
   suggestedAction: string;
 }
 
+export interface PageSpeedInfo {
+  performanceScore: number;
+  lcp: number;
+  fid: number;
+  cls: number;
+  ttfb: number;
+  speedIndex: number;
+  seoScore: number;
+  accessibilityScore: number;
+  bestPracticesScore: number;
+  mobileUsability: string;
+  firstContentfulPaint: number;
+  largestContentfulPaint: number;
+  totalBlockingTime: number;
+  cumulativeLayoutShift: number;
+  speedRecommendations: string[];
+}
+
 export interface SEOReportData {
   generatedAt: number;
   dateRange: {
@@ -103,6 +121,7 @@ export interface SEOReportData {
   conversions: ConversionData;
   recommendations: SEORecommendations;
   aiContent: AIGeneratedContent;
+  pageSpeed?: PageSpeedInfo;
 }
 
 export interface PerformanceSummary {
