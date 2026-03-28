@@ -1,0 +1,6 @@
+Building: solaris amd64
+Building: linux ppc64le
+Building: darwin amd64
+Building: linux mips
+Building: darwin arm64
+build is not installed, but available in the following packages, pick one to run it, Ctrl+C to cancel.

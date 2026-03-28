@@ -1,10 +1,9 @@
 /**
  * @license
  * SPDX-License-Identifier: Apache-2.0
- * AI-powered SEO analysis service using Tauri backend with local AI model
+ * AI-powered SEO analysis service with intelligent rule-based generation
  */
 
-import { invoke } from '@tauri-apps/api/core';
 import { BusinessInfo, FrameworkInfo, ScrapingQuality } from '../types';
 
 export interface SEOAnalysisInput {
@@ -42,117 +41,16 @@ export interface AIReportResult {
   frameworkAnalysis?: string;
 }
 
-interface TauriSEOInput {
-  business_name: string;
-  business_category: string;
-  business_location: string;
-  website: string | null;
-  title: string | null;
-  meta_description: string | null;
-  h1_tags: string[];
-  h2_tags: string[];
-  keywords: string[];
-  word_count: number;
-  has_schema: boolean;
-  internal_links: number;
-  external_links: number;
-}
-
-interface TauriAIResult {
-  recommendations: string;
-  suggested_description: string;
-  suggested_posts: string[];
-  review_responses: { review: string; response: string }[];
-  keywords: string[];
-  competitor_insights: string;
-}
-
-function isTauriAvailable(): boolean {
-  return typeof window !== 'undefined' && '__TAURI__' in window;
-}
-
 class AIService {
-  private isInitialized: boolean = false;
-  private isDesktop: boolean = false;
-  private initPromise: Promise<void> | null = null;
+  private isInitialized: boolean = true;
 
   async initialize(): Promise<void> {
-    if (this.isInitialized) return;
-    if (this.initPromise) return this.initPromise;
-
-    const init = async () => {
-      try {
-        this.isDesktop = isTauriAvailable();
-        console.log('AI Service: Running in', this.isDesktop ? 'Desktop (Tauri)' : 'Web (Fallback) mode');
-
-        if (this.isDesktop) {
-          try {
-            await invoke('initialize_ai', { modelPath: 'models/' });
-            console.log('AI model loaded successfully');
-          } catch (e) {
-            console.warn('AI model initialization skipped:', e);
-          }
-        }
-
-        this.isInitialized = true;
-      } catch (error) {
-        console.error('Failed to initialize AI service:', error);
-        this.isInitialized = true;
-      }
-    };
-
-    this.initPromise = init();
-    return this.initPromise;
+    console.log('AI Service: Rule-based generation ready');
   }
 
   async generateSEOReport(input: SEOAnalysisInput): Promise<AIReportResult> {
-    await this.initialize();
-
     const { business, scrapedData, frameworkInfo, scrapingQuality } = input;
 
-    if (this.isDesktop) {
-      try {
-        const tauriInput: TauriSEOInput = {
-          business_name: business.name,
-          business_category: business.category,
-          business_location: business.location,
-          website: business.website || null,
-          title: scrapedData?.title || null,
-          meta_description: scrapedData?.metaDescription || null,
-          h1_tags: scrapedData?.h1Tags || [],
-          h2_tags: scrapedData?.h2Tags || [],
-          keywords: scrapedData?.keywords || [],
-          word_count: scrapedData?.wordCount || 0,
-          has_schema: scrapedData?.hasSchema || false,
-          internal_links: scrapedData?.internalLinks || 0,
-          external_links: scrapedData?.externalLinks || 0,
-        };
-
-        const result = await invoke<TauriAIResult>('generate_seo_report', { input: tauriInput });
-        
-        return {
-          recommendations: result.recommendations,
-          suggestedDescription: result.suggested_description,
-          suggestedPosts: result.suggested_posts,
-          reviewResponses: result.review_responses,
-          keywords: result.keywords,
-          competitorInsights: result.competitor_insights,
-          frameworkAnalysis: frameworkInfo ? this.analyzeFramework(frameworkInfo, scrapingQuality) : undefined
-        };
-      } catch (e) {
-        console.warn('Tauri AI generation failed, using fallback:', e);
-      }
-    }
-
-    return this.generateFallbackReport(business, scrapedData, frameworkInfo, scrapingQuality);
-  }
-
-  private async generateFallbackReport(
-    business: BusinessInfo,
-    scrapedData: ScrapedDataForAI | null,
-    frameworkInfo?: FrameworkInfo,
-    scrapingQuality?: ScrapingQuality
-  ): Promise<AIReportResult> {
     const recommendations = this.buildRecommendations(business, scrapedData, frameworkInfo, scrapingQuality);
     const suggestedDescription = this.generateDescription(business, scrapedData);
     const suggestedPosts = this.generatePostIdeas(business, scrapedData);
@@ -369,10 +267,6 @@ class AIService {
 
   isReady(): boolean {
     return this.isInitialized;
-  }
-
-  isRunningDesktop(): boolean {
-    return this.isDesktop;
   }
 }
 
