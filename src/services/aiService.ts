@@ -64,15 +64,17 @@ class AIService {
       try {
         console.log('Initializing AI models...');
         
-        // Use a lightweight text generation model optimized for browser
         this.textGenerator = await pipeline(
           'text-generation',
-          'Xenova/gpt2', // Fast, works well in browser
-          { device: 'webgpu' }
+          'Xenova/gpt2',
+          { 
+            device: 'webgpu',
+            quantization: 'q8',
+          }
         ).catch(() => 
           pipeline(
             'text-generation', 
-            'Xenova/distilgpt2', // Fallback
+            'Xenova/distilgpt2',
             { device: 'wasm' }
           )
         );
@@ -93,12 +95,11 @@ class AIService {
 
     const { business, scrapedData, frameworkInfo, scrapingQuality } = input;
 
-    // Generate report sections using AI
     const [recommendations, description, posts, reviewResponses, keywords, competitorInsights] = await Promise.all([
       this.generateRecommendations(business, scrapedData, frameworkInfo, scrapingQuality),
       this.generateDescription(business, scrapedData),
       this.generatePostIdeas(business, scrapedData),
-      this.generateReviewResponses(),
+      this.generateReviewResponses(business),
       this.extractKeywords(business, scrapedData),
       this.generateCompetitorInsights(business)
     ]);
@@ -124,29 +125,7 @@ class AIService {
   ): Promise<string> {
     const context = this.buildSEOContext(business, scrapedData);
     
-    const prompt = `${context}
-
-You are an expert SEO consultant. Based on the above website audit data, generate a comprehensive SEO recommendations report in markdown format.
-
-The report should include:
-
-## SEO Recommendations
-- Specific, actionable improvements based on the actual data found
-- Prioritize issues by impact (critical, high, medium, low)
-${frameworkInfo ? `\n## Framework Analysis: ${frameworkInfo.name}
-- Rendering Mode: ${frameworkInfo.renderingMode.toUpperCase()}
-- Detection Confidence: ${frameworkInfo.confidence}%
-- Specific recommendations for this technology stack` : ''}
-${scrapingQuality && !scrapingQuality.isComplete ? '\n## ⚠️ Scraping Limitations\n' + scrapingQuality.limitations.map(l => `- ${l}`).join('\n') : ''}
-
-## Technical Checklist
-- [ ] XML sitemap submitted to Google Search Console
-- [ ] Robots.txt allows crawling
-- [ ] Page speed under 3 seconds
-- [ ] Mobile responsive design
-- [ ] HTTPS enabled
-
-Be specific and data-driven. Reference the actual metrics found during the audit.`;
+    const prompt = `${context}\n\nYou are an expert SEO consultant. Based on the above website audit data, generate a comprehensive SEO recommendations report in markdown format.\n\nThe report should include:\n\n## SEO Recommendations\n- Specific, actionable improvements based on the actual data found\n- Prioritize issues by impact (critical, high, medium, low)\n${frameworkInfo ? `\n## Framework Analysis: ${frameworkInfo.name}\n- Rendering Mode: ${frameworkInfo.renderingMode.toUpperCase()}\n- Detection Confidence: ${frameworkInfo.confidence}%\n- Specific recommendations for this technology stack` : ''}\n${scrapingQuality && !scrapingQuality.isComplete ? '\n## ⚠️ Scraping Limitations\n' + scrapingQuality.limitations.map(l => `- ${l}`).join('\n') : ''}\n\n## Technical Checklist\n- [ ] XML sitemap submitted to Google Search Console\n- [ ] Robots.txt allows crawling\n- [ ] Page speed under 3 seconds\n- [ ] Mobile responsive design\n- [ ] HTTPS enabled\n\nBe specific and data-driven. Reference the actual metrics found during the audit.`;
 
     return this.generateWithAI(prompt, 500);
   }
@@ -157,21 +136,7 @@ Be specific and data-driven. Reference the actual metrics found during the audit
       `${scrapedData.title} ${scrapedData.h1Tags.join(' ')} ${scrapedData.h2Tags.join(' ')}`.slice(0, 500) : 
       '';
 
-    const prompt = `Generate an optimized Google Business Profile description for:
-Business: ${business.name}
-Category: ${business.category}
-Location: ${business.location}
-Existing meta description: "${currentDesc}"
-Content themes: ${existingContent}
-
-Create a compelling 350-400 character description that:
-- Includes primary keywords naturally
-- Highlights unique value proposition
-- Mentions location
-- Has clear call-to-action
-- Is professional and trustworthy
-
-Return ONLY the description, no additional text.`;
+    const prompt = `Generate an optimized Google Business Profile description for:\nBusiness: ${business.name}\nCategory: ${business.category}\nLocation: ${business.location}\nExisting meta description: \"${currentDesc}\"\nContent themes: ${existingContent}\n\nCreate a compelling 350-400 character description that:\n- Includes primary keywords naturally\n- Highlights unique value proposition\n- Mentions location\n- Has clear call-to-action\n- Is professional and trustworthy\n\nReturn ONLY the description, no additional text.`;
 
     const result = await this.generateWithAI(prompt, 150);
     return result.trim();
@@ -180,28 +145,14 @@ Return ONLY the description, no additional text.`;
   private async generatePostIdeas(business: BusinessInfo, scrapedData: ScrapedDataForAI | null): Promise<string[]> {
     const keywords = scrapedData?.keywords?.slice(0, 5).join(', ') || business.category;
 
-    const prompt = `Generate 3 engaging social media post ideas for a ${business.category} business called "${business.name}" in ${business.location}.
-
-Primary keywords: ${keywords}
-
-Each post should:
-- Be ready to post on Google Business Profile or social media
-- Be 100-200 characters
-- Include relevant emoji
-- Have a clear purpose (awareness, engagement, promotion)
-- Drive customer action
-
-Format as a JSON array:
-["Post 1...", "Post 2...", "Post 3..."]
-
-Return ONLY the JSON array.`;
+    const prompt = `Generate 3 engaging social media post ideas for a ${business.category} business called \"${business.name}\" in ${business.location}.\n\nPrimary keywords: ${keywords}\n\nEach post should:\n- Be ready to post on Google Business Profile or social media\n- Be 100-200 characters\n- Include relevant emoji\n- Have a clear purpose (awareness, engagement, promotion)\n- Drive customer action\n\nFormat as a JSON array:\n[\"Post 1...\", \"Post 2...\", \"Post 3...\"]\n\nReturn ONLY the JSON array.`;
 
     const result = await this.generateWithAI(prompt, 300);
     
     try {
-      const posts = JSON.parse(result);
-      if (Array.isArray(posts) && posts.length === 3) {
-        return posts;
+      const posts = JSON.parse(result.replace(/\n/g, '').match(/(\[.*\])/s)?.[0] || '[]');
+      if (Array.isArray(posts) && posts.length > 0) {
+        return posts.slice(0, 3);
       }
     } catch {
       // Fallback parsing
@@ -214,20 +165,23 @@ Return ONLY the JSON array.`;
     ];
   }
 
-  private async generateReviewResponses(): Promise<{ review: string; response: string }[]> {
+  private async generateReviewResponses(business: BusinessInfo): Promise<{ review: string; response: string }[]> {
+    const prompts = {
+      positive: `Customer left a 5-star review: \"Great service and friendly staff!\"\nWrite a professional, appreciative response for ${business.name}.`,
+      neutral: `Customer left a 3-star review: \"It was okay, but the wait was a bit long.\"\nWrite a professional, balanced response for ${business.name} that acknowledges the feedback.`,
+      negative: `Customer left a 1-star review: \"I was very disappointed with the quality.\"\nWrite a professional, empathetic response for ${business.name} that aims to resolve the issue offline.`
+    };
+
+    const [positive, neutral, negative] = await Promise.all([
+      this.generateWithAI(prompts.positive, 80),
+      this.generateWithAI(prompts.neutral, 80),
+      this.generateWithAI(prompts.negative, 80)
+    ]);
+
     return [
-      { 
-        review: "Great service and friendly staff!", 
-        response: "Thank you so much for the kind words! We're thrilled to have served you and look forward to seeing you again soon." 
-      },
-      { 
-        review: "Very professional, would recommend.", 
-        response: "We appreciate your recommendation! It was our pleasure to help. Don't hesitate to reach out if you need anything in the future." 
-      },
-      { 
-        review: "Amazing experience, will return!", 
-        response: "We're so glad you had an amazing experience! Our team takes pride in delivering excellence every time. Can't wait to welcome you back!" 
-      }
+      { review: "Great service and friendly staff!", response: positive || "Thank you for your positive feedback! We're delighted you had a great experience." },
+      { review: "It was okay, but the wait was a bit long.", response: neutral || "Thank you for your feedback. We apologize for the wait and are working to improve."}, 
+      { review: "I was very disappointed with the quality.", response: negative || "We are very sorry to hear about your experience. Please contact us directly so we can make things right." }
     ];
   }
 
@@ -255,7 +209,6 @@ Return ONLY the JSON array.`;
       .slice(0, 10)
       .map(([word]) => word);
 
-    // Ensure business category and location are included
     const categoryKeyword = business.category.toLowerCase().split(' ')[0];
     const locationKeyword = business.location.split(',')[0].trim().toLowerCase();
 
@@ -270,15 +223,7 @@ Return ONLY the JSON array.`;
   }
 
   private async generateCompetitorInsights(business: BusinessInfo): Promise<string> {
-    const prompt = `Generate competitor analysis insights for a ${business.category} business called "${business.name}" in ${business.location}.
-
-Provide actionable advice on:
-1. How to outrank competitors in local search
-2. Key differentiators to highlight
-3. Common competitor weaknesses to exploit
-4. Local SEO tactics specific to this business type
-
-Be specific and actionable. Return as a concise bullet-point list.`;
+    const prompt = `Generate competitor analysis insights for a ${business.category} business called \"${business.name}\" in ${business.location}.\n\nProvide actionable advice on:\n1. How to outrank competitors in local search\n2. Key differentiators to highlight\n3. Common competitor weaknesses to exploit\n4. Local SEO tactics specific to this business type\n\nBe specific and actionable. Return as a concise bullet-point list.`;
 
     const result = await this.generateWithAI(prompt, 400);
     return result.trim();
@@ -288,138 +233,34 @@ Be specific and actionable. Return as a concise bullet-point list.`;
     const insights: string[] = [];
 
     const frameworkAdvice: Record<string, { general: string[], ssr: string[], csr: string[] }> = {
-      'Next.js': {
-        general: [
-          'Use next/head for dynamic meta tags per page',
-          'Implement Next.js Image for automatic optimization',
-          'Consider Incremental Static Regeneration (ISR) for SEO'
-        ],
-        ssr: ['Ensure proper getServerSideProps for real-time content'],
-        csr: ['Consider Static Generation or ISR for better SEO performance']
-      },
-      'React': {
-        general: [
-          'Use react-helmet or @unhead/react for meta management',
-          'Implement server-side rendering with Next.js or Remix',
-          'Use React.lazy for code splitting'
-        ],
-        ssr: ['Meta tags properly rendered on server'],
-        csr: ['Consider adding SSR (Next.js/Remix) for better SEO']
-      },
-      'Vue': {
-        general: [
-          'Use @unhead/vue for SEO meta tags',
-          'Consider Nuxt.js for universal rendering',
-          'Ensure proper hydration markers'
-        ],
-        ssr: ['SSR properly configured'],
-        csr: ['Consider Nuxt.js for built-in SSR support']
-      },
-      'Angular': {
-        general: [
-          'Use Angular Universal for SSR',
-          'Implement TransferState for API caching',
-          'Configure Meta and Title services'
-        ],
-        ssr: ['Angular Universal is configured'],
-        csr: ['Add @nguniversal/express-engine for SSR']
-      },
-      'Shopify (Theme)': {
-        general: [
-          'Use Shopify SEO features in admin panel',
-          'Optimize product images with descriptive filenames',
-          'Set up custom title templates in preferences'
-        ],
-        ssr: [],
-        csr: []
-      },
-      'WordPress': {
-        general: [
-          'Install Yoast SEO or RankMath plugin',
-          'Use a lightweight, SEO-friendly theme',
-          'Optimize images with ShortPixel or Smush'
-        ],
-        ssr: [],
-        csr: []
-      },
-      'Wix': {
-        general: [
-          'Use Wix SEO Hub for optimization',
-          'Enable SEO-friendly URLs in settings',
-          'Add alt text to images via media manager'
-        ],
-        ssr: [],
-        csr: []
-      },
-      'Squarespace': {
-        general: [
-          'Use built-in SEO panel per page',
-          'Enable SSL certificate',
-          'Configure sitemap in Settings'
-        ],
-        ssr: [],
-        csr: []
-      }
+      'Next.js': { general: ['Use next/head for dynamic meta tags per page', 'Implement Next.js Image for automatic optimization', 'Consider Incremental Static Regeneration (ISR) for SEO'], ssr: ['Ensure proper getServerSideProps for real-time content'], csr: ['Consider Static Generation or ISR for better SEO performance'] },
+      'React': { general: ['Use react-helmet or @unhead/react for meta management', 'Implement server-side rendering with Next.js or Remix', 'Use React.lazy for code splitting'], ssr: ['Meta tags properly rendered on server'], csr: ['Consider adding SSR (Next.js/Remix) for better SEO'] },
+      'Vue': { general: ['Use @unhead/vue for SEO meta tags', 'Consider Nuxt.js for universal rendering', 'Ensure proper hydration markers'], ssr: ['SSR properly configured'], csr: ['Consider Nuxt.js for built-in SSR support'] },
+      'Angular': { general: ['Use Angular Universal for SSR', 'Implement TransferState for API caching', 'Configure Meta and Title services'], ssr: ['Angular Universal is configured'], csr: ['Add @nguniversal/express-engine for SSR'] },
+      'Shopify (Theme)': { general: ['Use Shopify SEO features in admin panel', 'Optimize product images with descriptive filenames', 'Set up custom title templates in preferences'], ssr: [], csr: [] },
+      'WordPress': { general: ['Install Yoast SEO or RankMath plugin', 'Use a lightweight, SEO-friendly theme', 'Optimize images with ShortPixel or Smush'], ssr: [], csr: [] },
+      'Wix': { general: ['Use Wix SEO Hub for optimization', 'Enable SEO-friendly URLs in settings', 'Add alt text to images via media manager'], ssr: [], csr: [] },
+      'Squarespace': { general: ['Use built-in SEO panel per page', 'Enable SSL certificate', 'Configure sitemap in Settings'], ssr: [], csr: [] }
     };
 
     const advice = frameworkAdvice[framework.name];
     if (advice) {
       insights.push(...advice.general);
-      if (framework.renderingMode === 'csr' && advice.csr.length) {
-        insights.push(...advice.csr);
-      } else if (framework.renderingMode === 'ssr' && advice.ssr.length) {
-        insights.push(...advice.ssr);
-      }
+      if (framework.renderingMode === 'csr' && advice.csr.length) { insights.push(...advice.csr); }
+      else if (framework.renderingMode === 'ssr' && advice.ssr.length) { insights.push(...advice.ssr); }
     }
 
-    if (quality && !quality.isComplete) {
-      insights.push(`⚠️ Content may be incomplete due to ${framework.name}. ${quality.suggestedAction}`);
-    }
+    if (quality && !quality.isComplete) { insights.push(`⚠️ Content may be incomplete due to ${framework.name}. ${quality.suggestedAction}`); }
 
     return insights.map(i => `- ${i}`).join('\n');
   }
 
   private buildSEOContext(business: BusinessInfo, scrapedData: ScrapedDataForAI | null): string {
     if (!scrapedData) {
-      return `# Website Audit for ${business.name}
-## Business Information
-- Name: ${business.name}
-- Category: ${business.category}
-- Location: ${business.location}
-- Website: ${business.website || 'Not provided'}
-
-## Audit Status
-No website data available. Please ensure the URL is correct and publicly accessible.`;
+      return `# Website Audit for ${business.name}\n## Business Information\n- Name: ${business.name}\n- Category: ${business.category}\n- Location: ${business.location}\n- Website: ${business.website || 'Not provided'}\n\n## Audit Status\nNo website data available. Please ensure the URL is correct and publicly accessible.`;
     }
 
-    return `# Website Audit for ${business.name}
-## Business Information
-- Name: ${business.name}
-- Category: ${business.category}
-- Location: ${business.location}
-- Website: ${business.website}
-
-## On-Page SEO Metrics
-- Title: "${scrapedData.title}" (${scrapedData.title.length} chars ${scrapedData.title.length <= 60 ? '✅' : '❌'})
-- Meta Description: "${scrapedData.metaDescription}" (${scrapedData.metaDescription.length} chars ${scrapedData.metaDescription.length <= 160 ? '✅' : '❌'})
-- H1 Tags: ${scrapedData.h1Tags.length} found ${scrapedData.h1Tags.length === 1 ? '✅' : '⚠️'}
-- H2 Tags: ${scrapedData.h2Tags.length} found
-- Word Count: ${scrapedData.wordCount} words ${scrapedData.wordCount >= 300 ? '✅' : '❌'}
-
-## Content Analysis
-- Images: ${scrapedData.images.length} total
-${scrapedData.images.length > 0 ? `- Images with alt text: ${scrapedData.images.filter(i => i.alt).length}/${scrapedData.images.length}` : ''}
-- Internal Links: ${scrapedData.internalLinks}
-- External Links: ${scrapedData.externalLinks}
-- Schema.org/JSON-LD: ${scrapedData.hasSchema ? '✅ Present' : '❌ Missing'}
-
-## Social Meta (Open Graph)
-- OG Title: ${scrapedData.ogTags.ogTitle ? '✅ ' + scrapedData.ogTags.ogTitle : '❌ Missing'}
-- OG Description: ${scrapedData.ogTags.ogDescription ? '✅ Present' : '❌ Missing'}
-- OG Image: ${scrapedData.ogTags.ogImage ? '✅ Present' : '❌ Missing'}
-
-## Keywords
-${scrapedData.keywords.length > 0 ? scrapedData.keywords.join(', ') : 'None detected'}`;
+    return `# Website Audit for ${business.name}\n## Business Information\n- Name: ${business.name}\n- Category: ${business.category}\n- Location: ${business.location}\n- Website: ${business.website}\n\n## On-Page SEO Metrics\n- Title: \"${scrapedData.title}\" (${scrapedData.title.length} chars ${scrapedData.title.length <= 60 ? '✅' : '❌'})\n- Meta Description: \"${scrapedData.metaDescription}\" (${scrapedData.metaDescription.length} chars ${scrapedData.metaDescription.length <= 160 ? '✅' : '❌'})\n- H1 Tags: ${scrapedData.h1Tags.length} found ${scrapedData.h1Tags.length === 1 ? '✅' : '⚠️'}\n- H2 Tags: ${scrapedData.h2Tags.length} found\n- Word Count: ${scrapedData.wordCount} words ${scrapedData.wordCount >= 300 ? '✅' : '❌'}\n\n## Content Analysis\n- Images: ${scrapedData.images.length} total\n${scrapedData.images.length > 0 ? `- Images with alt text: ${scrapedData.images.filter(i => i.alt).length}/${scrapedData.images.length}` : ''}\n- Internal Links: ${scrapedData.internalLinks}\n- External Links: ${scrapedData.externalLinks}\n- Schema.org/JSON-LD: ${scrapedData.hasSchema ? '✅ Present' : '❌ Missing'}\n\n## Social Meta (Open Graph)\n- OG Title: ${scrapedData.ogTags.ogTitle ? '✅ ' + scrapedData.ogTags.ogTitle : '❌ Missing'}\n- OG Description: ${scrapedData.ogTags.ogDescription ? '✅ Present' : '❌ Missing'}\n- OG Image: ${scrapedData.ogTags.ogImage ? '✅ Present' : '❌ Missing'}\n\n## Keywords\n${scrapedData.keywords.length > 0 ? scrapedData.keywords.join(', ') : 'None detected'}`;
   }
 
   private async generateWithAI(prompt: string, maxLength: number): Promise<string> {
@@ -437,7 +278,6 @@ ${scrapedData.keywords.length > 0 ? scrapedData.keywords.join(', ') : 'None dete
       });
 
       const generated = result[0]?.generated_text || '';
-      // Remove the prompt from the response
       const response = generated.slice(prompt.length).trim();
       return response || this.getFallbackResponse(prompt);
     } catch (error) {
@@ -448,23 +288,7 @@ ${scrapedData.keywords.length > 0 ? scrapedData.keywords.join(', ') : 'None dete
 
   private getFallbackResponse(prompt: string): string {
     if (prompt.includes('recommendations')) {
-      return `## SEO Recommendations
-
-- Add a descriptive title tag (50-60 characters)
-- Write a compelling meta description (150-160 characters)
-- Ensure you have exactly one H1 heading with target keyword
-- Add structured data (JSON-LD schema) for local business
-- Add alt text to all images
-- Expand content to 500+ words
-- Add Open Graph tags for social sharing
-
-## Technical Checklist
-
-- [ ] XML sitemap submitted to Google Search Console
-- [ ] Robots.txt allows crawling
-- [ ] Page speed under 3 seconds
-- [ ] Mobile responsive design
-- [ ] HTTPS enabled`;
+      return `## SEO Recommendations\n\n- Add a descriptive title tag (50-60 characters)\n- Write a compelling meta description (150-160 characters)\n- Ensure you have exactly one H1 heading with target keyword\n- Add structured data (JSON-LD schema) for local business\n- Add alt text to all images\n- Expand content to 500+ words\n- Add Open Graph tags for social sharing\n\n## Technical Checklist\n\n- [ ] XML sitemap submitted to Google Search Console\n- [ ] Robots.txt allows crawling\n- [ ] Page speed under 3 seconds\n- [ ] Mobile responsive design\n- [ ] HTTPS enabled`;
     }
     return 'AI generation unavailable. Please try again.';
   }

@@ -234,17 +234,23 @@ export interface ScrapedSEOData {
 
 export async function scrapeWebsite(url: string): Promise<ScrapedSEOData | null> {
   if (!url) return null;
-  
-  const corsProxy = "https://api.allorigins.win/raw?url=";
-  
+
+  const scrapingServiceUrl = "https://chrome.browserless.io/scrape?url=";
+
   try {
-    const response = await fetch(corsProxy + encodeURIComponent(url), {
-      headers: { "Accept": "text/html" }
-    });
+    const response = await fetch(`${scrapingServiceUrl}${encodeURIComponent(url)}`);
+
+    if (!response.ok) {
+      throw new Error(`Failed to fetch from scraping service with status: ${response.status}`);
+    }
+
+    const jsonResponse = await response.json();
+    const html = jsonResponse.data[0].html;
+
+    if (!html) {
+      throw new Error("Scraping service did not return HTML content.");
+    }
     
-    if (!response.ok) throw new Error("Failed to fetch");
-    
-    const html = await response.text();
     const parser = new DOMParser();
     const doc = parser.parseFromString(html, "text/html");
     
