@@ -5,19 +5,18 @@
 
 import React from 'react';
 import { motion } from 'motion/react';
-import { CheckCircle, Code, Database, DollarSign, GitBranch, Layers, LifeBuoy, Package, Users, Zap, Sun, Moon, Rocket, BarChart3, FileText, Shield, Globe, Sparkles, ArrowRight, Star } from 'lucide-react';
-import { WhiteLabelSettings, ThemeMode, View } from '../../types';
+import { CheckCircle, Code, Database, DollarSign, GitBranch, Layers, LifeBuoy, Package, Users, Zap, Rocket, BarChart3, FileText, Shield, Globe, Sparkles, ArrowRight, Star } from 'lucide-react';
+import { WhiteLabelSettings, View } from '../../types';
 import { LogoIcon, SmallLogoIcon } from '../common';
 import themeService from '../../services/themeservice';
 
 interface LandingPageProps {
   settings: WhiteLabelSettings;
   logoPreview: string | null;
-  currentTheme: ThemeMode;
   setView: React.Dispatch<React.SetStateAction<View>>;
 }
 
-export const LandingPage: React.FC<LandingPageProps> = ({ settings, logoPreview, currentTheme, setView }) => {
+export const LandingPage: React.FC<LandingPageProps> = ({ settings, logoPreview, setView }) => {
   const features = [
     { title: 'AI-Powered SEO Audits', description: 'Generate comprehensive SEO reports with local AI and actionable insights in seconds.', icon: <Sparkles size={24} />, color: 'from-purple-500 to-pink-500' },
     { title: 'White-Label Ready', description: 'Complete branding control - logo, colors, custom domain. Make it yours.', icon: <Shield size={24} />, color: 'from-blue-500 to-cyan-500' },
@@ -68,13 +67,6 @@ export const LandingPage: React.FC<LandingPageProps> = ({ settings, logoPreview,
               <a href="#pricing" className="text-sm text-secondary hover:text-primary transition-colors">Pricing</a>
             </nav>
             <div className="flex gap-3 items-center">
-              <button 
-                onClick={() => themeService.toggleTheme()}
-                className="p-2 rounded-xl hover:bg-secondary/50 transition-colors text-secondary"
-                aria-label="Toggle theme"
-              >
-                {currentTheme === 'light' ? <Moon size={18} /> : <Sun size={18} />}
-              </button>
               <button onClick={() => setView('dashboard')} className="hidden sm:block text-sm font-medium text-secondary hover:text-primary transition-colors">Live Demo</button>
               <button onClick={() => document.getElementById('pricing')?.scrollIntoView({ behavior: 'smooth' })} className="px-5 py-2 rounded-full hover:opacity-90 transition-all text-sm font-semibold bg-gradient-to-r from-purple-600 to-pink-600 text-white shadow-lg shadow-purple-500/25">
                 Get Started
