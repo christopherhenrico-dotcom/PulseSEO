@@ -1,10 +1,19 @@
 /**
  * @license
  * SPDX-License-Identifier: Apache-2.0
- * AI-powered SEO analysis service with intelligent rule-based generation
+ * PulseSEO AI Service - Local AI with Transformers.js
  */
 
 import { BusinessInfo, FrameworkInfo, ScrapingQuality } from '../types';
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+let pipeline: any = null;
+try {
+  const transformers = require('@xenova/transformers');
+  pipeline = transformers.pipeline;
+} catch (e) {
+  console.warn('Transformers.js not available, using rule-based AI');
+}
 
 export interface SEOAnalysisInput {
   business: BusinessInfo;
@@ -42,21 +51,97 @@ export interface AIReportResult {
 }
 
 class AIService {
-  private isInitialized: boolean = true;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  private generator: any = null;
+  private isInitialized: boolean = false;
+  private initPromise: Promise<void> | null = null;
 
   async initialize(): Promise<void> {
-    console.log('AI Service: Rule-based generation ready');
+    if (this.isInitialized) return;
+    if (this.initPromise) return this.initPromise;
+
+    const init = async () => {
+      if (!pipeline) {
+        console.log('AI: Rule-based mode');
+        this.isInitialized = true;
+        return;
+      }
+
+      try {
+        console.log('Initializing local AI model...');
+        
+        this.generator = await pipeline('text-generation', 'Xenova/distilgpt2', {
+          device: 'webgpu',
+          dtype: 'q4',
+        });
+        
+        this.isInitialized = true;
+        console.log('Local AI ready!');
+      } catch (e) {
+        console.warn('WebGPU failed, trying CPU:', e);
+        try {
+          this.generator = await pipeline('text-generation', 'Xenova/distilgpt2', {
+            device: 'cpu',
+          });
+          this.isInitialized = true;
+          console.log('Local AI ready (CPU mode)');
+        } catch (e2) {
+          console.error('AI init failed:', e2);
+          this.isInitialized = true;
+        }
+      }
+    };
+
+    this.initPromise = init();
+    return this.initPromise;
+  }
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  private async generateWithAI(prompt: string, maxTokens: number = 200): Promise<string> {
+    if (!this.generator) {
+      return '';
+    }
+
+    try {
+      const result = await this.generator(prompt, {
+        max_new_tokens: maxTokens,
+        temperature: 0.7,
+        top_p: 0.9,
+        do_sample: true,
+      });
+      
+      const output = result[0]?.generated_text || '';
+      return output.slice(prompt.length).trim();
+    } catch (e) {
+      console.warn('AI generation failed:', e);
+      return '';
+    }
   }
 
   async generateSEOReport(input: SEOAnalysisInput): Promise<AIReportResult> {
+    await this.initialize();
+
     const { business, scrapedData, frameworkInfo, scrapingQuality } = input;
 
-    const recommendations = this.buildRecommendations(business, scrapedData, frameworkInfo, scrapingQuality);
-    const suggestedDescription = this.generateDescription(business, scrapedData);
-    const suggestedPosts = this.generatePostIdeas(business, scrapedData);
-    const reviewResponses = this.generateReviewResponses(business);
-    const keywords = this.extractKeywords(business, scrapedData);
-    const competitorInsights = this.generateCompetitorInsights(business);
+    let recommendations = this.buildRecommendations(business, scrapedData, frameworkInfo, scrapingQuality);
+    let suggestedDescription = this.generateDescription(business, scrapedData);
+    let suggestedPosts = this.generatePostIdeas(business, scrapedData);
+    let reviewResponses = this.generateReviewResponses(business);
+    let keywords = this.extractKeywords(business, scrapedData);
+    let competitorInsights = this.generateCompetitorInsights(business);
+
+    if (this.generator && scrapedData) {
+      try {
+        const aiPrompt = `You are an SEO expert. Provide 3 specific actionable recommendations for improving SEO for a ${business.category} business called "${business.name}" in ${business.location}. Current issues: title="${scrapedData.title}", meta="${scrapedData.metaDescription}", h1s=${scrapedData.h1Tags.length}, wordCount=${scrapedData.wordCount}, hasSchema=${scrapedData.hasSchema}. Be specific and actionable.`;
+        
+        const aiResult = await this.generateWithAI(aiPrompt, 150);
+        if (aiResult) {
+          recommendations = `## AI Insights\n\n${aiResult}\n\n---\n\n${recommendations}`;
+        }
+      } catch (e) {
+        console.warn('AI enhancement failed:', e);
+      }
+    }
 
     return {
       recommendations,
@@ -89,9 +174,6 @@ class AIService {
     if (!scrapedData?.metaDescription) {
       recs += '- Add a meta description (150-160 characters)\n';
       hasIssues = true;
-    } else if (scrapedData.metaDescription.length > 160) {
-      recs += `- Shorten meta description (currently ${scrapedData.metaDescription.length} chars)\n`;
-      hasIssues = true;
     }
 
     if (!scrapedData?.h1Tags.length) {
@@ -115,29 +197,11 @@ class AIService {
       hasIssues = true;
     }
 
-    if (!scrapedData?.ogTags.ogTitle) {
-      recs += '- Add Open Graph tags for social sharing\n';
-      hasIssues = true;
-    }
-
     if (!hasIssues) {
       recs += '- Great job! Continue publishing quality content regularly\n';
     }
 
-    if (frameworkInfo) {
-      recs += `\n## Framework Analysis: ${frameworkInfo.name}\n`;
-      recs += `- Rendering Mode: ${frameworkInfo.renderingMode.toUpperCase()}\n`;
-      recs += `- Detection Confidence: ${frameworkInfo.confidence}%\n`;
-      recs += `\n${this.analyzeFramework(frameworkInfo, scrapingQuality)}\n`;
-    }
-
-    if (scrapingQuality && !scrapingQuality.isComplete) {
-      recs += `\n## ⚠️ Scraping Limitations\n`;
-      recs += scrapingQuality.limitations.map(l => `- ${l}`).join('\n') + '\n';
-      recs += `\n${scrapingQuality.suggestedAction}\n`;
-    }
-
-    recs += `\n## Technical Checklist\n\n`;
+    recs += '\n## Technical Checklist\n\n';
     recs += '- [ ] XML sitemap submitted to Google Search Console\n';
     recs += '- [ ] Robots.txt allows crawling\n';
     recs += '- [ ] Page speed under 3 seconds\n';
@@ -148,29 +212,22 @@ class AIService {
   }
 
   private generateDescription(business: BusinessInfo, scrapedData: ScrapedDataForAI | null): string {
-    const category = business.category.toLowerCase();
-    const location = business.location.split(',')[0];
-    
-    return `${business.name} - Professional ${category} services in ${location}. With years of experience, we deliver quality solutions tailored to your needs. Contact us today for exceptional service and customer satisfaction.`;
+    return `${business.name} - Professional ${business.category} services in ${business.location}. With years of experience, we deliver quality solutions tailored to your needs. Contact us today!`;
   }
 
   private generatePostIdeas(business: BusinessInfo, scrapedData: ScrapedDataForAI | null): string[] {
-    const category = business.category.toLowerCase();
-    const location = business.location.split(',')[0];
-    const name = business.name;
-
     return [
-      `🎉 Discover quality ${category} services at ${name} in ${location}! Contact us today for exceptional service.`,
-      `📍 Visit ${name} - Your trusted ${category} expert in ${location}. We're here to serve all your needs!`,
-      `⭐ Thank you for choosing ${name}! Your satisfaction is our priority. Review us on Google to help others discover our ${category} services.`
+      `🎉 Discover quality ${business.category} services at ${business.name} in ${business.location}! Contact us today!`,
+      `📍 Visit ${business.name} - Your trusted ${business.category} expert in ${business.location}. We're here to serve!`,
+      `⭐ Thank you for choosing ${business.name}! Your satisfaction is our priority.`
     ];
   }
 
   private generateReviewResponses(business: BusinessInfo): { review: string; response: string }[] {
     return [
-      { review: "Great service and friendly staff!", response: "Thank you so much for the kind words! We're delighted you had a great experience with us. We look forward to seeing you again soon!" },
-      { review: "It was okay, but the wait was a bit long.", response: "Thank you for your feedback. We apologize for the wait and are working to improve our service times. We appreciate your patience and hope to serve you better next time." },
-      { review: "I was very disappointed with the quality.", response: "We are very sorry to hear about your experience. Please contact us directly so we can make things right. Your satisfaction is our top priority." }
+      { review: "Great service!", response: "Thank you so much! We're thrilled to have served you." },
+      { review: "It was okay.", response: "Thank you for feedback. We're working to improve." },
+      { review: "Disappointed.", response: "We apologize. Please contact us directly to make things right." }
     ];
   }
 
@@ -183,8 +240,7 @@ class AIService {
     const wordFreq: Record<string, number> = {};
     const stopWords = new Set([
       'the', 'and', 'a', 'of', 'to', 'in', 'is', 'it', 'for', 'with', 'on', 'at', 
-      'by', 'an', 'be', 'this', 'that', 'your', 'you', 'are', 'we', 'our', 'us',
-      'was', 'for', 'not', 'but', 'have', 'has', 'had', 'will', 'can', 'all'
+      'by', 'an', 'be', 'this', 'that', 'your', 'you', 'are', 'we', 'our'
     ]);
     
     words.forEach(word => {
@@ -193,76 +249,25 @@ class AIService {
       }
     });
 
-    const topKeywords = Object.entries(wordFreq)
+    return Object.entries(wordFreq)
       .sort((a, b) => b[1] - a[1])
-      .slice(0, 8)
+      .slice(0, 10)
       .map(([word]) => word);
-
-    const categoryKeyword = business.category.toLowerCase().split(' ')[0];
-    const locationKeyword = business.location.split(',')[0].trim().toLowerCase();
-
-    const finalKeywords = [categoryKeyword, locationKeyword];
-    topKeywords.forEach(k => {
-      if (!finalKeywords.includes(k) && finalKeywords.length < 10) {
-        finalKeywords.push(k);
-      }
-    });
-
-    return finalKeywords.slice(0, 10);
   }
 
   private generateCompetitorInsights(business: BusinessInfo): string {
-    return `## Competitor Analysis for ${business.name}
-
-### How to Outrank Competitors
-- Ensure complete Google Business Profile with all fields
-- Post regularly (3-4 times per week)
-- Respond to all reviews within 24 hours
-- Add photos frequently (weekly)
-
-### Key Differentiators to Highlight
-- Unique service offerings
-- Years of experience / expertise
-- Customer testimonials and reviews
-- Special promotions or guarantees
-
-### Local SEO Tactics
-- Build local citations across directories
-- Use geo-targeted keywords in content
-- Create location-specific landing pages
-- Encourage customer reviews on Google
-
-### Monitor & Track
-- Track competitor posting frequency
-- Analyze their keywords and content
-- Monitor their review responses
-- Watch their photo updates`;
+    return `## Competitor Analysis\n\n- Complete Google Business Profile\n- Post regularly (3-4x/week)\n- Respond to all reviews within 24 hours\n- Add photos weekly\n- Build local citations\n- Use geo-targeted keywords`;
   }
 
   private analyzeFramework(framework: FrameworkInfo, quality?: ScrapingQuality): string {
-    const insights: string[] = [];
-
-    const frameworkAdvice: Record<string, { general: string[], ssr: string[], csr: string[] }> = {
-      'Next.js': { general: ['Use next/head for dynamic meta tags per page', 'Implement Next.js Image for automatic optimization', 'Consider Incremental Static Regeneration (ISR) for SEO'], ssr: ['Ensure proper getServerSideProps for real-time content'], csr: ['Consider Static Generation or ISR for better SEO performance'] },
-      'React': { general: ['Use react-helmet or @unhead/react for meta management', 'Implement server-side rendering with Next.js or Remix', 'Use React.lazy for code splitting'], ssr: ['Meta tags properly rendered on server'], csr: ['Consider adding SSR (Next.js/Remix) for better SEO'] },
-      'Vue': { general: ['Use @unhead/vue for SEO meta tags', 'Consider Nuxt.js for universal rendering', 'Ensure proper hydration markers'], ssr: ['SSR properly configured'], csr: ['Consider Nuxt.js for built-in SSR support'] },
-      'Angular': { general: ['Use Angular Universal for SSR', 'Implement TransferState for API caching', 'Configure Meta and Title services'], ssr: ['Angular Universal is configured'], csr: ['Add @nguniversal/express-engine for SSR'] },
-      'Shopify (Theme)': { general: ['Use Shopify SEO features in admin panel', 'Optimize product images with descriptive filenames', 'Set up custom title templates in preferences'], ssr: [], csr: [] },
-      'WordPress': { general: ['Install Yoast SEO or RankMath plugin', 'Use a lightweight, SEO-friendly theme', 'Optimize images with ShortPixel or Smush'], ssr: [], csr: [] },
-      'Wix': { general: ['Use Wix SEO Hub for optimization', 'Enable SEO-friendly URLs in settings', 'Add alt text to images via media manager'], ssr: [], csr: [] },
-      'Squarespace': { general: ['Use built-in SEO panel per page', 'Enable SSL certificate', 'Configure sitemap in Settings'], ssr: [], csr: [] }
+    const advice: Record<string, string[]> = {
+      'Next.js': ['Use next/head for meta tags', 'Implement ISR for SEO'],
+      'React': ['Use react-helmet for SEO', 'Consider Next.js for SSR'],
+      'Vue': ['Use @unhead/vue', 'Consider Nuxt.js for SSR'],
+      'WordPress': ['Install Yoast SEO', 'Use SEO-friendly theme'],
     };
-
-    const advice = frameworkAdvice[framework.name];
-    if (advice) {
-      insights.push(...advice.general);
-      if (framework.renderingMode === 'csr' && advice.csr.length) { insights.push(...advice.csr); }
-      else if (framework.renderingMode === 'ssr' && advice.ssr.length) { insights.push(...advice.ssr); }
-    }
-
-    if (quality && !quality.isComplete) { insights.push(`⚠️ Content may be incomplete due to ${framework.name}. ${quality.suggestedAction}`); }
-
-    return insights.map(i => `- ${i}`).join('\n');
+    
+    return (advice[framework.name] || ['Ensure proper meta tags']).map(i => `- ${i}`).join('\n');
   }
 
   isReady(): boolean {

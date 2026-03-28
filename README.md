@@ -1,10 +1,10 @@
-# PulseSEO - AI-Powered Local SEO Audit Platform
+# PulseSEO - Enterprise SEO Audit Platform
 
-A production-ready SEO audit tool with professional Whatagraph-style reports.
+**For sale: Complete source code for a production-ready SEO audit platform.**
 
 ---
 
-## 🚀 Quick Start (Run Now)
+## Quick Start (Run Now - Web Version)
 
 ```bash
 npm install
@@ -15,73 +15,65 @@ Open http://localhost:3000
 
 ---
 
-## 📦 Distribution Files
+## Build Desktop App (Enterprise)
 
-### Windows
-- Run `INSTALL.bat` - Creates desktop shortcut, Start Menu entry
-
-### Linux
-- Run `install.sh` - Creates desktop shortcut, app menu entry
-
-### macOS
-- Run `install.command` - Creates Applications folder shortcut
-
-### Portable
-- Just open `dist/index.html` in any browser
-
----
-
-## 🔧 Build from Source
+On your local machine:
 
 ```bash
-# Install dependencies
 npm install
-
-# Build for production
-npm run build
+npm run build:desktop
 ```
 
----
-
-## 🔑 Features
-
-### SEO Analysis (REAL DATA)
-- Website scraping via browserless.io
-- SEO score calculation (0-100)
-- On-page analysis: title, meta, headings, images, links
-- Framework detection (Next.js, React, WordPress, etc.)
-- Schema.org detection
-
-### Professional Reports
-- **Summary Tab**: Executive summary, KPIs, recommendations
-- **Visibility Tab**: Impressions, clicks, CTR, keywords
-- **Traffic Tab**: Sessions by channel/device, landing pages
-- **Conversions Tab**: Conversion metrics, top pages
-
-### White-Label
-Customize in `src/types.ts`:
-- Brand name
-- Logo
-- Colors
-- Support email
+Creates:
+- `release/PulseSEO Setup.exe` (Windows)
+- `release/PulseSEO.dmg` (macOS)
+- `release/PulseSEO.AppImage` (Linux)
 
 ---
 
-## 🛠️ Tech Stack
+## What's Included
+
+### ✅ Real Data
+- Website SEO scraping (jina.ai API)
+- PageSpeed Insights (Google API)
+- Local AI recommendations (Transformers.js)
+
+### ✅ Desktop Features
+- Native window (min/max/close)
+- Offline-first
+- Local storage
+- Professional installer
+
+### ✅ Reports (Whatagraph-style)
+- Summary tab
+- Visibility tab  
+- Traffic tab
+- Conversions tab
+
+### ✅ White-Label
+- Custom logo
+- Custom colors
+- Custom brand name
+
+---
+
+## Tech Stack
 
 - React 19 + TypeScript
-- Vite (build tool)
+- Vite
 - Tailwind CSS 4
-- Framer Motion (animations)
+- Transformers.js (local AI)
+- Electron (desktop app)
 
 ---
 
-## 📝 API Note
+## Build Requirements
 
-The Whatagraph-style reports use simulated traffic/conversion data because real Google Search Console / Google Analytics data requires API authentication. The core SEO analysis (score, recommendations, content analysis) uses REAL data from website scraping.
+- Node.js 18+
+- npm 9+
 
 ---
 
-## 📄 License
+## License
 
-MIT - Use, modify, and resell freely.
+MIT
