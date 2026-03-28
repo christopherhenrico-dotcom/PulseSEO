@@ -42,7 +42,7 @@ export const AuditForm: React.FC<AuditFormProps> = ({
     animate={{ opacity: 1, y: 0 }}
     exit={{ opacity: 0, y: -10 }}
     transition={{ duration: 0.2 }}
-    className="max-w-2xl mx-auto space-y-8 py-12"
+    className="max-w-2xl mx-auto space-y-8 py-8"
   >
     <div className="text-center space-y-2">
       <h1 className="text-3xl font-light tracking-tight text-primary">New SEO Audit</h1>
@@ -50,14 +50,14 @@ export const AuditForm: React.FC<AuditFormProps> = ({
     </div>
 
     {analysisError && (
-      <div className="p-4 glass-card rounded-2xl flex items-center gap-3 text-error">
-        <AlertCircle size={20} />
+      <div className="p-4 glass-card rounded-xl flex items-center gap-3 text-error">
+        <AlertCircle size={18} />
         <span className="text-sm">{analysisError}</span>
       </div>
     )}
 
-    <form onSubmit={handleCreateAudit} className="glass-card p-8 rounded-3xl space-y-6">
-        <div className={`flex items-center gap-2 p-3 rounded-xl ${aiReady ? 'bg-success/10' : 'bg-warning/10'}`}>
+    <form onSubmit={handleCreateAudit} className="glass-card p-8 rounded-2xl space-y-6">
+        <div className={`flex items-center gap-2 p-3 rounded-lg ${aiReady ? 'bg-success/10' : 'bg-warning/10'}`}>
           <div className={`w-2 h-2 rounded-full ${aiReady ? 'bg-success' : 'bg-warning'} animate-pulse`} />
           <span className="text-xs text-secondary">
             {aiInitializing ? 'Initializing AI engine...' : aiReady ? 'AI engine ready for intelligent analysis' : 'AI engine is offline'}
@@ -66,11 +66,11 @@ export const AuditForm: React.FC<AuditFormProps> = ({
 
       {clients.length > 0 && (
         <div className="space-y-2">
-          <label className="text-xs font-medium uppercase tracking-wider text-secondary">Link to Client (Optional)</label>
+          <label className="text-xs font-medium uppercase tracking-wider text-tertiary">Link to Client (Optional)</label>
           <select 
             value={selectedClientId}
             onChange={e => setSelectedClientId(e.target.value)}
-            className="w-full px-4 py-3 rounded-2xl glass-input text-primary"
+            className="w-full px-4 py-3 rounded-xl glass-input text-primary text-sm"
           >
             <option value="">No client linked</option>
             {clients.map(c => (
@@ -80,73 +80,73 @@ export const AuditForm: React.FC<AuditFormProps> = ({
         </div>
       )}
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
         <div className="space-y-2">
-          <label className="text-xs font-medium uppercase tracking-wider text-secondary">Business Name *</label>
+          <label className="text-xs font-medium uppercase tracking-wider text-tertiary">Business Name *</label>
           <input 
             required
             type="text"
             value={newBusiness.name}
             onChange={e => setNewBusiness({ ...newBusiness, name: e.target.value })}
-            className="w-full px-4 py-3 rounded-2xl glass-input text-primary"
+            className="w-full px-4 py-3 rounded-xl glass-input text-primary text-sm"
             placeholder="e.g. Joe's Coffee"
           />
         </div>
         <div className="space-y-2">
-          <label className="text-xs font-medium uppercase tracking-wider text-secondary">Category *</label>
+          <label className="text-xs font-medium uppercase tracking-wider text-tertiary">Category *</label>
           <input 
             required
             type="text"
             value={newBusiness.category}
             onChange={e => setNewBusiness({ ...newBusiness, category: e.target.value })}
-            className="w-full px-4 py-3 rounded-2xl glass-input text-primary"
+            className="w-full px-4 py-3 rounded-xl glass-input text-primary text-sm"
             placeholder="e.g. Coffee Shop"
           />
         </div>
       </div>
 
       <div className="space-y-2">
-        <label className="text-xs font-medium uppercase tracking-wider text-secondary">Location *</label>
+        <label className="text-xs font-medium uppercase tracking-wider text-tertiary">Location *</label>
         <input 
           required
           type="text"
           value={newBusiness.location}
           onChange={e => setNewBusiness({ ...newBusiness, location: e.target.value })}
-          className="w-full px-4 py-3 rounded-2xl glass-input text-primary"
+          className="w-full px-4 py-3 rounded-xl glass-input text-primary text-sm"
           placeholder="e.g. Austin, TX"
         />
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
         <div className="space-y-2">
-          <label className="text-xs font-medium uppercase tracking-wider text-secondary">Website (Optional)</label>
+          <label className="text-xs font-medium uppercase tracking-wider text-tertiary">Website (Optional)</label>
           <input 
             type="url"
             value={newBusiness.website}
             onChange={e => setNewBusiness({ ...newBusiness, website: e.target.value })}
-            className="w-full px-4 py-3 rounded-2xl glass-input text-primary"
+            className="w-full px-4 py-3 rounded-xl glass-input text-primary text-sm"
             placeholder="https://joescoffee.com"
           />
         </div>
         <div className="space-y-2">
-          <label className="text-xs font-medium uppercase tracking-wider text-secondary">Phone (Optional)</label>
+          <label className="text-xs font-medium uppercase tracking-wider text-tertiary">Phone (Optional)</label>
           <input 
             type="tel"
             value={newBusiness.phone || ''}
             onChange={e => setNewBusiness({ ...newBusiness, phone: e.target.value })}
-            className="w-full px-4 py-3 rounded-2xl glass-input text-primary"
+            className="w-full px-4 py-3 rounded-xl glass-input text-primary text-sm"
             placeholder="+1 (555) 123-4567"
           />
         </div>
       </div>
 
       <div className="space-y-2">
-        <label className="text-xs font-medium uppercase tracking-wider text-secondary">Current Description (Optional)</label>
+        <label className="text-xs font-medium uppercase tracking-wider text-tertiary">Current Description (Optional)</label>
         <textarea 
           rows={3}
           value={newBusiness.description}
           onChange={e => setNewBusiness({ ...newBusiness, description: e.target.value })}
-          className="w-full px-4 py-3 rounded-2xl glass-input text-primary resize-none"
+          className="w-full px-4 py-3 rounded-xl glass-input text-primary text-sm resize-none"
           placeholder="Tell us about the business..."
         />
       </div>
@@ -154,17 +154,16 @@ export const AuditForm: React.FC<AuditFormProps> = ({
       <button 
         disabled={isAnalyzing}
         type="submit"
-        className="w-full py-4 rounded-2xl hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-3"
-        style={{ backgroundColor: settings.primaryColor, color: settings.colors.text }}
+        className="w-full py-3.5 rounded-xl hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2.5 text-sm font-medium bg-primary text-white shadow-lg shadow-primary/20"
       >
         {isAnalyzing ? (
           <>
-            <Loader2 className="animate-spin" size={20} />
+            <Loader2 className="animate-spin" size={18} />
             <span>{aiReady ? 'Scraping website & analyzing with AI...' : 'Scraping website & analyzing...'}</span>
           </>
         ) : (
           <>
-            <Zap size={20} />
+            <Zap size={18} />
             <span>Generate SEO Report</span>
           </>
         )}

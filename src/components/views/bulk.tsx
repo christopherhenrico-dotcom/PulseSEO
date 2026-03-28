@@ -36,63 +36,59 @@ export const BulkAudit: React.FC<BulkAuditProps> = ({
     animate={{ opacity: 1, y: 0 }}
     exit={{ opacity: 0, y: -10 }}
     transition={{ duration: 0.2 }}
-    className="max-w-4xl mx-auto space-y-8 py-12"
+    className="max-w-4xl mx-auto space-y-8 py-8"
   >
-    <div className="space-y-2">
+    <div className="space-y-1">
       <h1 className="text-3xl font-light tracking-tight text-primary">Bulk Audit</h1>
-      <p className="text-secondary">Analyze multiple businesses at once by pasting a list.</p>
+      <p className="text-secondary text-sm">Analyze multiple businesses at once by pasting a list.</p>
     </div>
 
-    <div className="glass-card p-8 rounded-3xl">
-      <div className="flex items-center gap-2 mb-4 p-3 rounded-xl bg-secondary">
+    <div className="glass-card p-8 rounded-2xl">
+      <div className="flex items-center gap-2 mb-5 p-3 rounded-lg bg-white/[0.03]">
         <div className={`w-2 h-2 rounded-full ${aiReady ? 'bg-success' : 'bg-warning'} animate-pulse`} />
         <span className="text-xs text-secondary">
           {aiInitializing ? 'Initializing AI engine...' : aiReady ? 'AI engine ready - Using local AI for intelligent analysis' : 'AI not available - Using rule-based analysis'}
         </span>
       </div>
 
-      <div className="space-y-4">
-        <label className="text-sm font-medium text-secondary">Paste businesses (one per line)</label>
+      <div className="space-y-3">
+        <label className="text-xs font-medium uppercase tracking-wider text-tertiary">Paste businesses (one per line)</label>
         <textarea
           value={bulkBusinesses}
           onChange={e => setBulkBusinesses(e.target.value)}
           placeholder={`Business Name, Category, Location, Website (optional)\nJoe's Coffee, Coffee Shop, Austin TX, https://joescoffee.com\nABC Plumbing, Plumbing, Dallas TX\nDowntown Dental, Dentist, Houston TX, https://downtowndental.com`}
           rows={10}
-          className="w-full px-4 py-3 rounded-2xl glass-input text-primary font-mono text-sm"
+          className="w-full px-4 py-3 rounded-xl glass-input text-primary font-mono text-sm"
         />
       </div>
       
       {bulkProcessing && bulkProgress.total > 0 && (
-        <div className="mt-4 space-y-2">
+        <div className="mt-5 space-y-2">
           <div className="flex justify-between text-xs text-secondary">
             <span>Processing {bulkProgress.current} of {bulkProgress.total}...</span>
             <span>{Math.round((bulkProgress.current / bulkProgress.total) * 100)}%</span>
           </div>
-          <div className="w-full h-2 rounded-full bg-secondary overflow-hidden">
+          <div className="w-full h-1.5 rounded-full bg-white/[0.06] overflow-hidden">
             <div 
-              className="h-full rounded-full transition-all duration-300"
-              style={{ 
-                width: `${(bulkProgress.current / bulkProgress.total) * 100}%`,
-                backgroundColor: settings.primaryColor 
-              }}
+              className="h-full rounded-full transition-all duration-300 bg-primary"
+              style={{ width: `${(bulkProgress.current / bulkProgress.total) * 100}%` }}
             />
           </div>
         </div>
       )}
       
-      <div className="mt-6 flex gap-4">
+      <div className="mt-6 flex gap-3">
         <button 
           onClick={handleBulkAudit}
           disabled={bulkProcessing || !bulkBusinesses.trim()}
-          className="px-6 py-3 rounded-xl hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center gap-2"
-          style={{ backgroundColor: settings.primaryColor, color: settings.colors.text }}
+          className="px-6 py-3 rounded-xl hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center gap-2 bg-primary text-white text-sm font-medium shadow-lg shadow-primary/20"
         >
-          {bulkProcessing ? <Loader2 className="animate-spin" size={18} /> : <Zap size={18} />}
+          {bulkProcessing ? <Loader2 className="animate-spin" size={16} /> : <Zap size={16} />}
           {bulkProcessing ? 'Processing...' : 'Start Bulk Audit'}
         </button>
         <button 
           onClick={() => setBulkBusinesses('')}
-          className="px-6 py-3 glass-card rounded-xl hover:glass-hover transition-all text-secondary"
+          className="px-6 py-3 glass-card rounded-xl hover:glass-hover transition-all text-secondary text-sm"
         >
           Clear
         </button>
@@ -102,9 +98,9 @@ export const BulkAudit: React.FC<BulkAuditProps> = ({
     <div className="text-center">
       <button 
         onClick={() => setView('dashboard')}
-        className="text-secondary hover:text-primary transition-colors"
+        className="text-sm text-secondary hover:text-primary transition-colors"
       >
-        ← Back to Dashboard
+        Back to Dashboard
       </button>
     </div>
   </motion.div>

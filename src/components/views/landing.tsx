@@ -61,7 +61,9 @@ export const LandingPage: React.FC<LandingPageProps> = ({ settings, logoPreview,
         <div className="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
           <div className="flex items-center gap-3">
             <LogoIcon settings={settings} logoPreview={logoPreview} />
-            <span className="font-bold text-xl tracking-tight text-gray-900 dark:text-white">{settings.brandName}</span>
+            {!(settings.logoUrl && logoPreview) && (
+              <span className="font-bold text-xl tracking-tight text-gray-900 dark:text-white">{settings.brandName}</span>
+            )}
           </div>
           <nav className="hidden md:flex items-center gap-8">
             <a href="#features" className="text-sm text-gray-600 dark:text-cyan-300 hover:text-white transition-colors">Features</a>
@@ -166,7 +168,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ settings, logoPreview,
                 <div className="w-3 h-3 rounded-full bg-red-500/80"></div>
                 <div className="w-3 h-3 rounded-full bg-yellow-500/80"></div>
                 <div className="w-3 h-3 rounded-full bg-green-500/80"></div>
-                <div className="ml-4 text-xs text-gray-500 font-mono">PulseSEO Dashboard</div>
+                <div className="ml-4 text-xs text-gray-500 font-mono">{settings.brandName} Dashboard</div>
               </div>
               <div className="p-6 bg-gray-50 dark:bg-black/20 min-h-[300px] flex items-center justify-center">
                 <div className="text-center">
@@ -312,10 +314,12 @@ export const LandingPage: React.FC<LandingPageProps> = ({ settings, logoPreview,
         <div className="max-w-7xl mx-auto px-6 flex flex-col md:flex-row justify-between items-center gap-4">
           <div className="flex items-center gap-2">
             <SmallLogoIcon settings={settings} logoPreview={logoPreview} />
-            <span className="font-semibold text-gray-900 dark:text-white">{settings.brandName}</span>
+            {!(settings.logoUrl && logoPreview) && (
+              <span className="font-semibold text-gray-900 dark:text-white">{settings.brandName}</span>
+            )}
           </div>
           <div className="text-sm text-gray-500">
-            © 2026 PulseSEO. All rights reserved.
+            &copy; 2026 {settings.brandName}. All rights reserved.
           </div>
           <div className="flex gap-6">
             <a href="https://github.com/christopherhenrico-dotcom/PulseSEO" target="_blank" rel="noopener noreferrer" className="text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors">GitHub</a>

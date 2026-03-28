@@ -40,7 +40,6 @@ module.exports = {
           DEFAULT: "hsl(var(--popover))",
           foreground: "hsl(var(--popover-foreground))",
         },
-        tertiary: 'var(--text-tertiary)',
         success: 'var(--success)',
         warning: 'var(--warning)',
         error: 'var(--error)',

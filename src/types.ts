@@ -292,28 +292,28 @@ export interface Client {
   totalAudits: number;
 }
 
-export type View = 'landing' | 'dashboard' | 'audit' | 'settings' | 'report' | 'clients' | 'bulk' | 'templates';
+export type View = 'landing' | 'dashboard' | 'audit' | 'settings' | 'report' | 'clients' | 'bulk' | 'templates' | 'allreports';
 
 export const DEFAULT_WHITE_LABEL: WhiteLabelSettings = {
   brandName: 'PulseSEO',
-  primaryColor: '#000000',
+  primaryColor: '#818CF8',
   supportEmail: 'support@pulseseo.com',
   website: 'https://pulseseo.com',
   theme: 'dark',
   colors: {
-    primary: '#000000',
+    primary: '#818CF8',
     secondary: '#6366F1',
     accent: '#8B5CF6',
-    background: '#0A0A0A',
-    surface: '#141414',
-    border: 'rgba(255, 255, 255, 0.08)',
-    text: '#FAFAFA',
-    textSecondary: '#A3A3A3',
-    textMuted: '#525252',
+    background: '#0B0E1A',
+    surface: '#0F1220',
+    border: 'rgba(255, 255, 255, 0.06)',
+    text: '#F0F0F5',
+    textSecondary: '#94A3B8',
+    textMuted: '#64748B',
     success: '#22C55E',
     warning: '#F59E0B',
     error: '#EF4444',
-    info: '#3B82F6'
+    info: '#818CF8'
   },
   fonts: {
     headingFont: 'Inter',

@@ -29,11 +29,12 @@ const ReportView = lazy(() => import('./components/views/report').then(m => ({ d
 const Clients = lazy(() => import('./components/views/clients').then(m => ({ default: m.Clients })));
 const BulkAudit = lazy(() => import('./components/views/bulk').then(m => ({ default: m.BulkAudit })));
 const Templates = lazy(() => import('./components/views/templates').then(m => ({ default: m.Templates })));
+const AllReports = lazy(() => import('./components/views/allReports').then(m => ({ default: m.AllReports })));
 
 function ViewLoader() {
   return (
     <div className="flex items-center justify-center h-full">
-      <Loader2 className="w-8 h-8 animate-spin text-cyan-400" />
+      <Loader2 className="w-8 h-8 animate-spin text-foreground opacity-50" />
     </div>
   );
 }
@@ -273,6 +274,8 @@ export default function App() {
           return <BulkAudit settings={settings} bulkBusinesses={bulkBusinesses} setBulkBusinesses={setBulkBusinesses} handleBulkAudit={handleBulkAudit} bulkProcessing={bulkProcessing} bulkProgress={bulkProgress} aiReady={aiReady} aiInitializing={aiInitializing} setView={setView} />;
         case 'templates':
           return <Templates setView={setView} />;
+        case 'allreports':
+          return <AllReports audits={audits} setView={setView} setSelectedAudit={setSelectedAudit} getScoreColorClass={getScoreColorClass} />;
         default:
           return null;
       }
@@ -290,19 +293,19 @@ export default function App() {
 
   const sidebarNav = (
     <>
-      <div className="flex-1 flex flex-col gap-4">
+      <div className="flex-1 flex flex-col gap-2">
         {[ { v: 'dashboard', icon: LayoutDashboard, title: 'Dashboard' },
           { v: 'audit', icon: Search, title: 'New Audit' },
           { v: 'clients', icon: UsersIcon, title: 'Clients' },
           { v: 'bulk', icon: UploadIcon, title: 'Bulk Audit' },
           { v: 'templates', icon: FileTextIcon, title: 'Templates' },
         ].map(({ v, icon: Icon, title }) => (
-          <button key={v} title={title} onClick={() => setView(v as any)} className={`p-3 rounded-2xl transition-all ${view === v ? 'bg-white/20 text-white' : 'text-cyan-300 hover:text-white hover:bg-white/10'}`}>
+          <button key={v} title={title} onClick={() => setView(v as any)} className={`p-3 rounded-xl transition-all ${view === v ? 'bg-primary/15 text-primary' : 'text-tertiary hover:text-primary hover:bg-white/5'}`}>
             <Icon size={20} />
           </button>
         ))}
       </div>
-      <button title="Settings" onClick={() => setView('settings')} className={`p-3 rounded-2xl transition-all ${view === 'settings' ? 'bg-white/20 text-white' : 'text-cyan-300 hover:text-white hover:bg-white/10'}`}>
+      <button title="Settings" onClick={() => setView('settings')} className={`p-3 rounded-xl transition-all ${view === 'settings' ? 'bg-primary/15 text-primary' : 'text-tertiary hover:text-primary hover:bg-white/5'}`}>
         <SettingsIcon size={20} />
       </button>
     </>
