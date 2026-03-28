@@ -10,9 +10,11 @@ import {
   ChevronRight, Share2, ShieldCheck, AlertCircle, Globe, Zap, Mail, 
   TrendingUp, TrendingDown, Minus, Eye, MousePointer, Target, Users,
   DollarSign, BarChart3, Search, ArrowUpRight, ArrowDownRight, Activity,
-  Layers, PieChart, LineChart
+  Layers, PieChart, LineChart, Download
 } from 'lucide-react';
 import { AuditResult, WhiteLabelSettings, View, SEOReportData } from '../../types';
+import jsPDF from 'jspdf';
+import html2canvas from 'html2canvas';
 
 interface ReportProps {
   selectedAudit: AuditResult;
@@ -73,12 +75,37 @@ const ChangeIndicator: React.FC<{ change: number }> = ({ change }) => {
 
 export const Report: React.FC<ReportProps> = ({ selectedAudit, settings, setView }) => {
   const [activeTab, setActiveTab] = useState<TabType>('summary');
+  const [isDownloading, setIsDownloading] = useState(false);
   const reportRef = useRef<HTMLDivElement>(null);
 
   if (!selectedAudit) return null;
 
   const { business, analysis } = selectedAudit;
   const reportData = analysis.reportData;
+
+  const handleDownloadPDF = async () => {
+    if (!reportRef.current) return;
+    setIsDownloading(true);
+
+    const canvas = await html2canvas(reportRef.current, {
+      scale: 2,
+      useCORS: true,
+      backgroundColor: null,
+    });
+
+    const pdf = new jsPDF('p', 'mm', 'a4');
+    const pdfWidth = pdf.internal.pageSize.getWidth();
+    const pdfHeight = pdf.internal.pageSize.getHeight();
+    const imgWidth = canvas.width;
+    const imgHeight = canvas.height;
+    const ratio = imgWidth / imgHeight;
+    const height = pdfWidth / ratio;
+
+    pdf.addImage(canvas.toDataURL('image/png', 1.0), 'PNG', 0, 0, pdfWidth, height);
+    pdf.save(`SEO_Audit_${business.name.replace(/ /g, '_')}.pdf`);
+    
+    setIsDownloading(false);
+  };
 
   const renderSummary = () => (
     <div className="space-y-8">
@@ -685,15 +712,25 @@ export const Report: React.FC<ReportProps> = ({ selectedAudit, settings, setView
           <span>Back to Dashboard</span>
         </button>
         <button 
-          onClick={() => window.print()}
+          onClick={handleDownloadPDF}
+          disabled={isDownloading}
           className="px-4 py-2 glass-card rounded-xl hover:glass-hover transition-all flex items-center gap-2 text-secondary"
         >
-          <Share2 size={16} />
-          <span>Export PDF</span>
+          {isDownloading ? (
+            <motion.div
+              animate={{ rotate: 360 }}
+              transition={{ repeat: Infinity, duration: 1, ease: 'linear' }}
+            >
+              <Download size={16} />
+            </motion.div>
+          ) : (
+            <Download size={16} />
+          )}
+          <span>{isDownloading ? 'Downloading...' : 'Download PDF'}</span>
         </button>
       </div>
 
-      <div ref={reportRef} className="glass-card rounded-[40px] overflow-hidden">
+      <div ref={reportRef} className="glass-card rounded-[40px] overflow-hidden bg-bg-primary text-text-primary p-8">
         <div className="p-8 bg-secondary border-b border-theme">
           <div className="flex flex-col md:flex-row justify-between items-center gap-6">
             <div className="text-center md:text-left">
@@ -757,6 +794,7 @@ export const Report: React.FC<ReportProps> = ({ selectedAudit, settings, setView
 
         <div className="p-6 bg-secondary border-t border-theme flex flex-col md:flex-row justify-between items-center gap-4 text-sm text-tertiary">
           <div className="flex items-center gap-2">
+            {settings.logoUrl && <img src={settings.logoUrl} alt={`${settings.brandName} logo`} className="h-6 w-auto" />}
             <span className="font-semibold" style={{ color: settings.primaryColor }}>{settings.brandName}</span>
           </div>
           <div className="flex items-center gap-6">
