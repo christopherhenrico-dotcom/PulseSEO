@@ -15,42 +15,30 @@ Open http://localhost:3000
 
 ---
 
-## 📦 Distribution
+## 📦 Distribution Files
 
-### Option 1: Windows Installer
-```bash
-npm run build
-```
-Then run `INSTALL.bat` to create a Windows installation.
+### Windows
+- Run `INSTALL.bat` - Creates desktop shortcut, Start Menu entry
 
-### Option 2: Portable Version
-The `dist/` folder contains a portable version:
-- Upload to any web server
-- Or run locally: `npx serve dist`
-- Or just open `dist/index.html` in a browser
+### Linux
+- Run `install.sh` - Creates desktop shortcut, app menu entry
 
-### Option 3: Desktop App (PWA)
-The app is a Progressive Web App:
-1. Open in Chrome/Edge
-2. Click "Install" icon in address bar
-3. Runs like a native desktop app
+### macOS
+- Run `install.command` - Creates Applications folder shortcut
+
+### Portable
+- Just open `dist/index.html` in any browser
 
 ---
 
-## 🔧 Development
+## 🔧 Build from Source
 
 ```bash
 # Install dependencies
 npm install
 
-# Start development server
-npm run dev
-
 # Build for production
 npm run build
-
-# Preview build
-npm run preview
 ```
 
 ---
@@ -97,12 +85,3 @@ The Whatagraph-style reports use simulated traffic/conversion data because real 
 ## 📄 License
 
 MIT - Use, modify, and resell freely.
-
----
-
-## ❓ Support
-
-For issues, check:
-1. Website is publicly accessible (not Cloudflare blocked)
-2. JavaScript is enabled
-3. CORS is not blocking browserless.io
