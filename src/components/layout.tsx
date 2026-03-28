@@ -17,14 +17,16 @@ interface MainLayoutProps {
 }
 
 export const MainLayout: React.FC<MainLayoutProps> = ({ settings, logoPreview, children, sidebar }) => (
-  <div className="min-h-screen bg-white dark:bg-black">
-    <GlassSidebar settings={settings} logoPreview={logoPreview}>
-      {sidebar}
-    </GlassSidebar>
-    <ContentArea>
-      {children}
-    </ContentArea>
-    <div className="fixed bottom-6 right-6 flex items-center gap-2 bg-white/10 dark:bg-white/5 backdrop-blur-xl rounded-full px-4 py-2 text-[10px] font-bold uppercase tracking-widest text-gray-500 dark:text-gray-400">
+  <div className="min-h-screen">
+    <div className="glass-panel" style={{ display: 'flex', minHeight: '90vh', maxWidth: '1400px', margin: '5vh auto', borderRadius: '16px', overflow: 'hidden' }}>
+      <GlassSidebar settings={settings} logoPreview={logoPreview}>
+        {sidebar}
+      </GlassSidebar>
+      <ContentArea>
+        {children}
+      </ContentArea>
+    </div>
+    <div className="fixed bottom-6 right-6 flex items-center gap-2 glass rounded-full px-4 py-2 text-[10px] font-bold uppercase tracking-widest text-gray-400">
       <ShieldCheck size={12} />
       <span>White Label Active</span>
     </div>
@@ -38,10 +40,10 @@ interface GlassSidebarProps {
 }
 
 export const GlassSidebar: React.FC<GlassSidebarProps> = ({ settings, logoPreview, children }) => (
-  <nav className="fixed left-0 top-0 bottom-0 w-20 flex flex-col items-center py-8 gap-8 z-50 bg-white/80 dark:bg-black/50 backdrop-blur-xl border-r border-gray-200 dark:border-white/10">
+  <aside className="glass-sidebar" style={{ width: '80px', padding: '20px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '32px' }}>
     <LogoIcon settings={settings} logoPreview={logoPreview} />
     {children}
-  </nav>
+  </aside>
 );
 
 interface ContentAreaProps {
@@ -49,11 +51,9 @@ interface ContentAreaProps {
 }
 
 export const ContentArea: React.FC<ContentAreaProps> = ({ children }) => (
-  <main className="pl-20 min-h-screen">
-    <div className="max-w-6xl mx-auto px-8 py-12">
-      <AnimatePresence mode="wait">
-        {children}
-      </AnimatePresence>
-    </div>
+  <main className="flex-1" style={{ padding: '30px', display: 'flex', flexDirection: 'column', gap: '20px', overflow: 'auto' }}>
+    <AnimatePresence mode="wait">
+      {children}
+    </AnimatePresence>
   </main>
 );
