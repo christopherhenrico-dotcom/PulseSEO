@@ -14,10 +14,10 @@ import {
   Loader2,
 } from 'lucide-react';
 import { AnimatePresence } from 'motion/react';
-import { WhiteLabelSettings, BusinessInfo, AuditResult, Client, ThemeMode, DEFAULT_WHITE_LABEL } from './types';
+import { WhiteLabelSettings, BusinessInfo, AuditResult, Client, DEFAULT_WHITE_LABEL } from './types';
 import { analyzeBusiness } from './services/seoService';
 import { aiService } from './services/aiService';
-import themeService from './services/themeservice';
+import { getTheme, setTheme, initTheme, Theme } from './services/theme';
 
 import { MainLayout } from './components/layout';
 import { LandingPage } from './components/views/landing';
@@ -33,7 +33,7 @@ const Templates = lazy(() => import('./components/views/templates').then(m => ({
 function ViewLoader() {
   return (
     <div className="flex items-center justify-center h-full">
-      <Loader2 className="w-8 h-8 animate-spin text-secondary" />
+      <Loader2 className="w-8 h-8 animate-spin text-gray-400 dark:text-gray-500" />
     </div>
   );
 }
@@ -82,18 +82,14 @@ export default function App() {
   const [bulkProgress, setBulkProgress] = useState({ current: 0, total: 0 });
   const [aiReady, setAiReady] = useState(false);
   const [aiInitializing, setAiInitializing] = useState(false);
-  const [currentTheme, setCurrentTheme] = useState<ThemeMode>(themeService.getTheme());
+  const [currentTheme, setCurrentTheme] = useState<Theme>(getTheme);
   const [logoPreview, setLogoPreview] = useState<string | null>(null);
   const [logoNaturalSize, setLogoNaturalSize] = useState<{ width: number; height: number } | null>(null);
   const logoInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    const unsubscribe = themeService.subscribe((theme) => {
-      setCurrentTheme(theme);
-    });
-    themeService.applyCustomColors(settings);
-    return unsubscribe;
-  }, [settings]);
+    initTheme();
+  }, []);
 
   useEffect(() => { localStorage.setItem('lp_settings', JSON.stringify(settings)); }, [settings]);
   useEffect(() => { localStorage.setItem('lp_audits', JSON.stringify(audits)); }, [audits]);
@@ -249,8 +245,15 @@ export default function App() {
   };
 
   const getScoreColorClass = (score: number) => {
-    const colors = themeService.getScoreColorClass(score);
-    return `${colors.text} ${colors.bg}`;
+    if (score >= 80) return 'text-green-500';
+    if (score >= 60) return 'text-yellow-500';
+    return 'text-red-500';
+  };
+
+  const handleThemeToggle = () => {
+    const next = currentTheme === 'dark' ? 'light' : 'dark';
+    setTheme(next);
+    setCurrentTheme(next);
   };
 
   const renderCurrentView = () => {
@@ -261,7 +264,7 @@ export default function App() {
         case 'audit':
           return <AuditForm settings={settings} clients={clients} selectedClientId={selectedClientId} setSelectedClientId={setSelectedClientId} newBusiness={newBusiness} setNewBusiness={setNewBusiness} handleCreateAudit={handleCreateAudit} isAnalyzing={isAnalyzing} analysisError={analysisError} aiReady={aiReady} aiInitializing={aiInitializing} setView={setView} />;
         case 'settings':
-          return <SettingsView settings={settings} setSettings={setSettings} logoPreview={logoPreview} handleLogoUpload={handleLogoUpload} removeLogo={removeLogo} logoInputRef={logoInputRef} logoNaturalSize={logoNaturalSize} />;
+          return <SettingsView settings={settings} setSettings={setSettings} logoPreview={logoPreview} handleLogoUpload={handleLogoUpload} removeLogo={removeLogo} logoInputRef={logoInputRef} logoNaturalSize={logoNaturalSize} currentTheme={currentTheme} onThemeToggle={handleThemeToggle} />;
         case 'report':
           return <ReportView selectedAudit={selectedAudit!} settings={settings} setView={setView} />;
         case 'clients':
@@ -280,7 +283,7 @@ export default function App() {
   if (view === 'landing') {
     return (
       <AnimatePresence mode="wait">
-        <LandingPage key="landing" settings={settings} logoPreview={logoPreview} currentTheme={currentTheme} setView={setView} />
+        <LandingPage key="landing" settings={settings} logoPreview={logoPreview} currentTheme={currentTheme} setView={setView} onThemeToggle={handleThemeToggle} />
       </AnimatePresence>
     );
   }
@@ -294,12 +297,12 @@ export default function App() {
           { v: 'bulk', icon: UploadIcon, title: 'Bulk Audit' },
           { v: 'templates', icon: FileTextIcon, title: 'Templates' },
         ].map(({ v, icon: Icon, title }) => (
-          <button key={v} title={title} onClick={() => setView(v as any)} className={`p-3 rounded-2xl transition-all ${view === v ? 'glass text-primary' : 'text-tertiary hover:text-primary hover:glass'}`}>
+          <button key={v} title={title} onClick={() => setView(v as any)} className={`p-3 rounded-2xl transition-all ${view === v ? 'bg-white/10 text-white' : 'text-gray-400 hover:text-white hover:bg-white/5'}`}>
             <Icon size={20} />
           </button>
         ))}
       </div>
-      <button title="Settings" onClick={() => setView('settings')} className={`p-3 rounded-2xl transition-all ${view === 'settings' ? 'glass text-primary' : 'text-tertiary hover:text-primary hover:glass'}`}>
+      <button title="Settings" onClick={() => setView('settings')} className={`p-3 rounded-2xl transition-all ${view === 'settings' ? 'bg-white/10 text-white' : 'text-gray-400 hover:text-white hover:bg-white/5'}`}>
         <SettingsIcon size={20} />
       </button>
     </>
