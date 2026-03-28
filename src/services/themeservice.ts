@@ -233,7 +233,7 @@ class ThemeService {
     
     element.style.background = colors.glassBg;
     element.style.backdropFilter = 'blur(20px) saturate(180%)';
-    element.style.WebkitBackdropFilter = 'blur(20px) saturate(180%)';
+    (element.style as unknown as { webkitBackdropFilter: string }).webkitBackdropFilter = 'blur(20px) saturate(180%)';
     element.style.border = `1px solid ${colors.glassBorder}`;
     element.style.boxShadow = `0 8px 32px ${colors.glassShadow}, inset 0 1px 0 ${colors.glassHighlight}`;
   }

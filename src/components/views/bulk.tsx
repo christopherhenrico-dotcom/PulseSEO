@@ -6,7 +6,7 @@
 import React from 'react';
 import { motion } from 'motion/react';
 import { Loader2, Zap } from 'lucide-react';
-import { WhiteLabelSettings } from '../../types';
+import { WhiteLabelSettings, View } from '../../types';
 
 interface BulkAuditProps {
   settings: WhiteLabelSettings;
@@ -17,7 +17,7 @@ interface BulkAuditProps {
   bulkProgress: { current: number; total: number };
   aiReady: boolean;
   aiInitializing: boolean;
-  setView: (view: string) => void;
+  setView: React.Dispatch<React.SetStateAction<View>>;
 }
 
 export const BulkAudit: React.FC<BulkAuditProps> = ({ 

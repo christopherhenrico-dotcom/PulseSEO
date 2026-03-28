@@ -6,9 +6,10 @@
 import React from 'react';
 import { motion } from 'motion/react';
 import { FileText, Layout } from 'lucide-react';
+import { View } from '../../types';
 
 interface TemplatesProps {
-  setView: (view: string) => void;
+  setView: React.Dispatch<React.SetStateAction<View>>;
 }
 
 export const Templates: React.FC<TemplatesProps> = ({ setView }) => (

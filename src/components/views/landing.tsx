@@ -6,7 +6,7 @@
 import React from 'react';
 import { motion } from 'motion/react';
 import { CheckCircle, Code, Database, DollarSign, GitBranch, Layers, LifeBuoy, Package, Users, Zap, Sun, Moon } from 'lucide-react';
-import { WhiteLabelSettings, ThemeMode } from '../../types';
+import { WhiteLabelSettings, ThemeMode, View } from '../../types';
 import { LogoIcon, SmallLogoIcon } from '../common';
 import themeService from '../../services/themeservice';
 
@@ -14,7 +14,7 @@ interface LandingPageProps {
   settings: WhiteLabelSettings;
   logoPreview: string | null;
   currentTheme: ThemeMode;
-  setView: (view: string) => void;
+  setView: React.Dispatch<React.SetStateAction<View>>;
 }
 
 export const LandingPage: React.FC<LandingPageProps> = ({ settings, logoPreview, currentTheme, setView }) => {

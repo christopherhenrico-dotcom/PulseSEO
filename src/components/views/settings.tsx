@@ -6,7 +6,7 @@
 import React from 'react';
 import { motion } from 'motion/react';
 import { ImagePlus, Trash, Upload, Globe, Mail, Palette, Layout, BarChart3, Check, Sun, Moon } from 'lucide-react';
-import { WhiteLabelSettings } from '../../types';
+import { WhiteLabelSettings, DEFAULT_WHITE_LABEL } from '../../types';
 import themeService from '../../services/themeservice';
 import { SmallLogoIcon } from '../common';
 

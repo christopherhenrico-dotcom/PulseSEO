@@ -4,7 +4,10 @@
  * AI-powered SEO analysis service using Transformers.js
  */
 
-import { pipeline, env, FeatureExtractionPipeline } from '@huggingface/transformers';
+import { pipeline, env } from '@huggingface/transformers';
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type AnyPipeline = any;
 import { BusinessInfo, FrameworkInfo, ScrapingQuality } from '../types';
 
 env.allowLocalModels = false;
@@ -45,48 +48,41 @@ export interface AIReportResult {
   frameworkAnalysis?: string;
 }
 
-type GenerationPipeline = Awaited<ReturnType<typeof pipeline>>;
-
 class AIService {
-  private textGenerator: GenerationPipeline | null = null;
-  private embeddingModel: FeatureExtractionPipeline | null = null;
+  private textGenerator: Awaited<AnyPipeline> | null = null;
+  private embeddingModel: Awaited<AnyPipeline> | null = null;
   private isInitialized: boolean = false;
   private initPromise: Promise<void> | null = null;
 
   async initialize(): Promise<void> {
     if (this.isInitialized) return;
-    
-    if (this.initPromise) {
-      return this.initPromise;
-    }
+    if (this.initPromise) return this.initPromise;
 
-    this.initPromise = (async () => {
+    const init = async () => {
       try {
         console.log('Initializing AI models...');
-        
-        this.textGenerator = await pipeline(
-          'text-generation',
-          'Xenova/gpt2',
-          { 
+        try {
+          this.textGenerator = await pipeline('text-generation', 'Xenova/gpt2', {
             device: 'webgpu',
-            quantization: 'q8',
-          }
-        ).catch(() => 
-          pipeline(
-            'text-generation', 
-            'Xenova/distilgpt2',
-            { device: 'wasm' }
-          )
-        );
-
-        console.log('AI text generator ready');
+          });
+        } catch (e) {
+          console.log('Failed to initialize WebGPU pipeline, falling back to WASM.', e);
+          this.textGenerator = await pipeline('text-generation', 'Xenova/distilgpt2', {
+            device: 'wasm',
+          });
+        }
         this.isInitialized = true;
+        console.log('AI text generator ready');
       } catch (error) {
-        console.error('Failed to initialize AI:', error);
+        console.error('Failed to initialize AI models:', error);
+        // allow retrying
+        this.initPromise = null;
+        this.isInitialized = false;
         throw error;
       }
-    })();
+    };
 
+    this.initPromise = init();
     return this.initPromise;
   }
 

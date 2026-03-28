@@ -7,6 +7,8 @@ import React from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { LogoIcon } from './common';
 import { WhiteLabelSettings } from '../types';
+import themeService from '../services/themeservice';
+import { ShieldCheck } from 'lucide-react';
 
 interface MainLayoutProps {
   settings: WhiteLabelSettings;

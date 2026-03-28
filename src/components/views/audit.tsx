@@ -6,7 +6,7 @@
 import React from 'react';
 import { motion } from 'motion/react';
 import { Loader2, Zap, AlertCircle } from 'lucide-react';
-import { Client, BusinessInfo, WhiteLabelSettings } from '../../types';
+import { Client, BusinessInfo, WhiteLabelSettings, View } from '../../types';
 
 interface AuditFormProps {
   settings: WhiteLabelSettings;
@@ -20,7 +20,7 @@ interface AuditFormProps {
   analysisError: string | null;
   aiReady: boolean;
   aiInitializing: boolean;
-  setView: (view: string) => void;
+  setView: React.Dispatch<React.SetStateAction<View>>;
 }
 
 export const AuditForm: React.FC<AuditFormProps> = ({ 

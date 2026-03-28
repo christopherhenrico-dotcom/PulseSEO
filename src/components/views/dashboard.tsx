@@ -15,12 +15,12 @@ import {
   Users,
   Upload
 } from 'lucide-react';
-import { AuditResult, Client } from '../../types';
+import { AuditResult, Client, View } from '../../types';
 
 interface DashboardProps {
   audits: AuditResult[];
   clients: Client[];
-  setView: (view: string) => void;
+  setView: React.Dispatch<React.SetStateAction<View>>;
   setSelectedAudit: (audit: AuditResult) => void;
   exportToCSV: () => void;
   exportToJSON: () => void;

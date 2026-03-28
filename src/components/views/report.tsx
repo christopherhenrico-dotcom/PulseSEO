@@ -7,12 +7,12 @@ import React, { useRef } from 'react';
 import { motion } from 'motion/react';
 import Markdown from 'react-markdown';
 import { ChevronRight, Share2, ShieldCheck, AlertCircle, Globe, Zap, Mail } from 'lucide-react';
-import { AuditResult, WhiteLabelSettings } from '../../types';
+import { AuditResult, WhiteLabelSettings, View } from '../../types';
 
 interface ReportProps {
   selectedAudit: AuditResult;
   settings: WhiteLabelSettings;
-  setView: (view: string) => void;
+  setView: React.Dispatch<React.SetStateAction<View>>;
 }
 
 export const Report: React.FC<ReportProps> = ({ selectedAudit, settings, setView }) => {
