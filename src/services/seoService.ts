@@ -357,7 +357,8 @@ export async function scrapeWebsite(url: string): Promise<ScrapedSEOData | null>
 export async function getPageSpeedData(url: string): Promise<PageSpeedData | null> {
   if (!url) return null;
 
-  const targetUrl = `https://www.googleapis.com/pagespeedonline/v5/runPagespeed?url=${encodeURIComponent(url)}&key=AIzaSyBG8j2D6L6NmqKw5EwD6C2E6dNT3W1p7ZY&category=PERFORMANCE&category=SEO&category=ACCESSIBILITY&category=BEST_PRACTICES&strategy=MOBILE`;
+  const apiKey = import.meta.env.VITE_PAGESPEED_API_KEY || 'AIzaSyBG8j2D6L6NmqKw5EwD6C2E6dNT3W1p7ZY';
+  const targetUrl = `https://www.googleapis.com/pagespeedonline/v5/runPagespeed?url=${encodeURIComponent(url)}&key=${apiKey}&category=PERFORMANCE&category=SEO&category=ACCESSIBILITY&category=BEST_PRACTICES&strategy=MOBILE`;
   const apiUrl = "https://api.allorigins.win/raw?url=" + encodeURIComponent(targetUrl);
 
   try {
