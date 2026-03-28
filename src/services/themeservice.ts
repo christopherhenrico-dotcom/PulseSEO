@@ -159,8 +159,10 @@ class ThemeService {
   }
 
   private loadTheme(): void {
-    // Always use dark mode
-    this.currentTheme = 'dark';
+    const saved = localStorage.getItem(THEME_STORAGE_KEY);
+    if (saved === 'light' || saved === 'dark') {
+      this.currentTheme = saved;
+    }
     this.applyTheme();
   }
 

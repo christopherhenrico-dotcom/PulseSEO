@@ -280,7 +280,7 @@ export default function App() {
   if (view === 'landing') {
     return (
       <AnimatePresence mode="wait">
-        <LandingPage key="landing" settings={settings} logoPreview={logoPreview} setView={setView} />
+        <LandingPage key="landing" settings={settings} logoPreview={logoPreview} currentTheme={currentTheme} setView={setView} />
       </AnimatePresence>
     );
   }
