@@ -58,8 +58,8 @@
     --input: 0 0% 15%;
     --ring: 0 0% 85%;
     --text-primary: #ffffff;
-    --text-secondary: rgba(255, 255, 255, 0.6);
-    --text-tertiary: rgba(255, 255, 255, 0.4);
+    --text-secondary: #22d3ee; /* cyan */
+    --text-tertiary: #c084fc; /* purple */
     --success: #22C55E;
     --warning: #F59E0B;
     --error: #EF4444;

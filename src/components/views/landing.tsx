@@ -64,19 +64,19 @@ export const LandingPage: React.FC<LandingPageProps> = ({ settings, logoPreview,
             <span className="font-bold text-xl tracking-tight text-gray-900 dark:text-white">{settings.brandName}</span>
           </div>
           <nav className="hidden md:flex items-center gap-8">
-            <a href="#features" className="text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors">Features</a>
-            <a href="#how-it-works" className="text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors">How It Works</a>
-            <a href="#pricing" className="text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors">Pricing</a>
+            <a href="#features" className="text-sm text-gray-600 dark:text-cyan-300 hover:text-white transition-colors">Features</a>
+            <a href="#how-it-works" className="text-sm text-gray-600 dark:text-cyan-300 hover:text-white transition-colors">How It Works</a>
+            <a href="#pricing" className="text-sm text-gray-600 dark:text-cyan-300 hover:text-white transition-colors">Pricing</a>
           </nav>
           <div className="flex gap-3 items-center">
             <button 
               onClick={onThemeToggle}
-              className="p-2 rounded-xl hover:bg-gray-100 dark:hover:bg-white/10 transition-colors text-gray-600 dark:text-gray-400"
+              className="p-2 rounded-xl hover:bg-gray-100 dark:hover:bg-white/10 transition-colors text-gray-600 dark:text-cyan-300"
               aria-label="Toggle theme"
             >
               {currentTheme === 'light' ? <Moon size={18} /> : <Sun size={18} />}
             </button>
-            <button onClick={() => setView('dashboard')} className="hidden sm:block text-sm font-medium text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors">Live Demo</button>
+            <button onClick={() => setView('dashboard')} className="hidden sm:block text-sm font-medium text-gray-600 dark:text-cyan-300 hover:text-white transition-colors">Live Demo</button>
             <button onClick={() => document.getElementById('pricing')?.scrollIntoView({ behavior: 'smooth' })} className="px-5 py-2 rounded-full hover:opacity-90 transition-all text-sm font-semibold bg-gradient-to-r from-purple-600 to-pink-600 text-white shadow-lg shadow-purple-500/25">
               Get Started
             </button>

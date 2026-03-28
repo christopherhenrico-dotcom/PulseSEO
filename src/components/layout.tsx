@@ -26,7 +26,7 @@ export const MainLayout: React.FC<MainLayoutProps> = ({ settings, logoPreview, c
         {children}
       </ContentArea>
     </div>
-    <div className="fixed bottom-6 right-6 flex items-center gap-2 glass rounded-full px-4 py-2 text-[10px] font-bold uppercase tracking-widest text-gray-400">
+    <div className="fixed bottom-6 right-6 flex items-center gap-2 glass rounded-full px-4 py-2 text-[10px] font-bold uppercase tracking-widest text-cyan-300">
       <ShieldCheck size={12} />
       <span>White Label Active</span>
     </div>

@@ -33,7 +33,7 @@ const Templates = lazy(() => import('./components/views/templates').then(m => ({
 function ViewLoader() {
   return (
     <div className="flex items-center justify-center h-full">
-      <Loader2 className="w-8 h-8 animate-spin text-gray-400 dark:text-gray-500" />
+      <Loader2 className="w-8 h-8 animate-spin text-cyan-400" />
     </div>
   );
 }
@@ -297,12 +297,12 @@ export default function App() {
           { v: 'bulk', icon: UploadIcon, title: 'Bulk Audit' },
           { v: 'templates', icon: FileTextIcon, title: 'Templates' },
         ].map(({ v, icon: Icon, title }) => (
-          <button key={v} title={title} onClick={() => setView(v as any)} className={`p-3 rounded-2xl transition-all ${view === v ? 'bg-white/10 text-white' : 'text-gray-400 hover:text-white hover:bg-white/5'}`}>
+          <button key={v} title={title} onClick={() => setView(v as any)} className={`p-3 rounded-2xl transition-all ${view === v ? 'bg-white/20 text-white' : 'text-cyan-300 hover:text-white hover:bg-white/10'}`}>
             <Icon size={20} />
           </button>
         ))}
       </div>
-      <button title="Settings" onClick={() => setView('settings')} className={`p-3 rounded-2xl transition-all ${view === 'settings' ? 'bg-white/10 text-white' : 'text-gray-400 hover:text-white hover:bg-white/5'}`}>
+      <button title="Settings" onClick={() => setView('settings')} className={`p-3 rounded-2xl transition-all ${view === 'settings' ? 'bg-white/20 text-white' : 'text-cyan-300 hover:text-white hover:bg-white/10'}`}>
         <SettingsIcon size={20} />
       </button>
     </>
