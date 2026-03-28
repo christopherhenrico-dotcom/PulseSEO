@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useRef, useCallback, lazy, Suspense } from 'react';
 import {
   LayoutDashboard,
   Search,
@@ -11,6 +11,7 @@ import {
   Users as UsersIcon,
   Upload as UploadIcon,
   FileText as FileTextIcon,
+  Loader2,
 } from 'lucide-react';
 import { AnimatePresence } from 'motion/react';
 import { WhiteLabelSettings, BusinessInfo, AuditResult, Client, ThemeMode, DEFAULT_WHITE_LABEL } from './types';
@@ -20,13 +21,22 @@ import themeService from './services/themeservice';
 
 import { MainLayout } from './components/layout';
 import { LandingPage } from './components/views/landing';
-import { Dashboard } from './components/views/dashboard';
-import { AuditForm } from './components/views/audit';
-import { Settings } from './components/views/settings';
-import { Report } from './components/views/report';
-import { Clients } from './components/views/clients';
-import { BulkAudit } from './components/views/bulk';
-import { Templates } from './components/views/templates';
+
+const Dashboard = lazy(() => import('./components/views/dashboard').then(m => ({ default: m.Dashboard })));
+const AuditForm = lazy(() => import('./components/views/audit').then(m => ({ default: m.AuditForm })));
+const SettingsView = lazy(() => import('./components/views/settings').then(m => ({ default: m.Settings })));
+const ReportView = lazy(() => import('./components/views/report').then(m => ({ default: m.Report })));
+const Clients = lazy(() => import('./components/views/clients').then(m => ({ default: m.Clients })));
+const BulkAudit = lazy(() => import('./components/views/bulk').then(m => ({ default: m.BulkAudit })));
+const Templates = lazy(() => import('./components/views/templates').then(m => ({ default: m.Templates })));
+
+function ViewLoader() {
+  return (
+    <div className="flex items-center justify-center h-full">
+      <Loader2 className="w-8 h-8 animate-spin text-secondary" />
+    </div>
+  );
+}
 
 const DEFAULT_CLIENT: Client = {
   id: '',
@@ -38,27 +48,26 @@ const DEFAULT_CLIENT: Client = {
   totalAudits: 0,
 };
 
+function safeJSONParse<T>(key: string, fallback: T): T {
+  try {
+    const saved = localStorage.getItem(key);
+    return saved ? JSON.parse(saved) : fallback;
+  } catch {
+    return fallback;
+  }
+}
+
 export default function App() {
   const [settings, setSettings] = useState<WhiteLabelSettings>(() => {
-    const saved = localStorage.getItem('lp_settings');
-    if (saved) {
-      try {
-        return { ...DEFAULT_WHITE_LABEL, ...JSON.parse(saved) };
-      } catch {
-        return DEFAULT_WHITE_LABEL;
-      }
-    }
-    return DEFAULT_WHITE_LABEL;
+    return safeJSONParse<WhiteLabelSettings>('lp_settings', DEFAULT_WHITE_LABEL);
   });
 
   const [clients, setClients] = useState<Client[]>(() => {
-    const saved = localStorage.getItem('lp_clients');
-    return saved ? JSON.parse(saved) : [];
+    return safeJSONParse<Client[]>('lp_clients', []);
   });
 
   const [audits, setAudits] = useState<AuditResult[]>(() => {
-    const saved = localStorage.getItem('lp_audits');
-    return saved ? JSON.parse(saved) : [];
+    return safeJSONParse<AuditResult[]>('lp_audits', []);
   });
 
   const [view, setView] = useState<'landing' | 'dashboard' | 'audit' | 'settings' | 'report' | 'clients' | 'bulk' | 'templates'>('landing');
@@ -72,7 +81,7 @@ export default function App() {
   const [bulkProcessing, setBulkProcessing] = useState(false);
   const [bulkProgress, setBulkProgress] = useState({ current: 0, total: 0 });
   const [aiReady, setAiReady] = useState(false);
-  const [aiInitializing, setAiInitializing] = useState(true);
+  const [aiInitializing, setAiInitializing] = useState(false);
   const [currentTheme, setCurrentTheme] = useState<ThemeMode>(themeService.getTheme());
   const [logoPreview, setLogoPreview] = useState<string | null>(null);
   const [logoNaturalSize, setLogoNaturalSize] = useState<{ width: number; height: number } | null>(null);
@@ -96,21 +105,19 @@ export default function App() {
     }
   }, [settings.logoUrl]);
 
-  useEffect(() => {
-    const initAI = async () => {
+  const initializeAIIfNeeded = useCallback(async () => {
+    if (!aiReady && !aiInitializing) {
       setAiInitializing(true);
       try {
         await aiService.initialize();
         setAiReady(true);
       } catch (error) {
         console.error('AI initialization failed:', error);
-        setAiReady(false);
       } finally {
         setAiInitializing(false);
       }
-    };
-    initAI();
-  }, []);
+    }
+  }, [aiReady, aiInitializing]);
 
   const handleLogoUpload = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -145,6 +152,16 @@ export default function App() {
     setIsAnalyzing(true);
     setAnalysisError(null);
     try {
+      if (!aiReady && !aiInitializing) {
+        await initializeAIIfNeeded();
+        await new Promise<void>(resolve => {
+          const check = () => {
+            if (!aiInitializing) resolve();
+            else setTimeout(check, 100);
+          };
+          check();
+        });
+      }
       const analysis = await analyzeBusiness(newBusiness, aiReady);
       const newAudit: AuditResult = {
         id: generateId(),
@@ -168,6 +185,16 @@ export default function App() {
     setBulkProcessing(true);
     setAnalysisError(null);
     try {
+      if (!aiReady && !aiInitializing) {
+        await initializeAIIfNeeded();
+        await new Promise<void>(resolve => {
+          const check = () => {
+            if (!aiInitializing) resolve();
+            else setTimeout(check, 100);
+          };
+          check();
+        });
+      }
       const lines = bulkBusinesses.split('\n').filter(l => l.trim());
       const newAudits: AuditResult[] = [];
       setBulkProgress({ current: 0, total: lines.length });
@@ -227,24 +254,27 @@ export default function App() {
   };
 
   const renderCurrentView = () => {
-    switch (view) {
-      case 'dashboard':
-        return <Dashboard audits={audits} clients={clients} setView={setView} setSelectedAudit={setSelectedAudit} exportToCSV={exportToCSV} exportToJSON={exportToJSON} getScoreColorClass={getScoreColorClass} />;
-      case 'audit':
-        return <AuditForm settings={settings} clients={clients} selectedClientId={selectedClientId} setSelectedClientId={setSelectedClientId} newBusiness={newBusiness} setNewBusiness={setNewBusiness} handleCreateAudit={handleCreateAudit} isAnalyzing={isAnalyzing} analysisError={analysisError} aiReady={aiReady} aiInitializing={aiInitializing} setView={setView} />;
-      case 'settings':
-        return <Settings settings={settings} setSettings={setSettings} logoPreview={logoPreview} handleLogoUpload={handleLogoUpload} removeLogo={removeLogo} logoInputRef={logoInputRef} logoNaturalSize={logoNaturalSize} />;
-      case 'report':
-        return <Report selectedAudit={selectedAudit!} settings={settings} setView={setView} />;
-      case 'clients':
-        return <Clients clients={clients} addClient={addClient} newClient={newClient} setNewClient={setNewClient} />;
-      case 'bulk':
-        return <BulkAudit settings={settings} bulkBusinesses={bulkBusinesses} setBulkBusinesses={setBulkBusinesses} handleBulkAudit={handleBulkAudit} bulkProcessing={bulkProcessing} bulkProgress={bulkProgress} aiReady={aiReady} aiInitializing={aiInitializing} setView={setView} />;
-      case 'templates':
-        return <Templates setView={setView} />;
-      default:
-        return null;
-    }
+    const viewContent = (() => {
+      switch (view) {
+        case 'dashboard':
+          return <Dashboard audits={audits} clients={clients} setView={setView} setSelectedAudit={setSelectedAudit} exportToCSV={exportToCSV} exportToJSON={exportToJSON} getScoreColorClass={getScoreColorClass} />;
+        case 'audit':
+          return <AuditForm settings={settings} clients={clients} selectedClientId={selectedClientId} setSelectedClientId={setSelectedClientId} newBusiness={newBusiness} setNewBusiness={setNewBusiness} handleCreateAudit={handleCreateAudit} isAnalyzing={isAnalyzing} analysisError={analysisError} aiReady={aiReady} aiInitializing={aiInitializing} setView={setView} />;
+        case 'settings':
+          return <SettingsView settings={settings} setSettings={setSettings} logoPreview={logoPreview} handleLogoUpload={handleLogoUpload} removeLogo={removeLogo} logoInputRef={logoInputRef} logoNaturalSize={logoNaturalSize} />;
+        case 'report':
+          return <ReportView selectedAudit={selectedAudit!} settings={settings} setView={setView} />;
+        case 'clients':
+          return <Clients clients={clients} addClient={addClient} newClient={newClient} setNewClient={setNewClient} />;
+        case 'bulk':
+          return <BulkAudit settings={settings} bulkBusinesses={bulkBusinesses} setBulkBusinesses={setBulkBusinesses} handleBulkAudit={handleBulkAudit} bulkProcessing={bulkProcessing} bulkProgress={bulkProgress} aiReady={aiReady} aiInitializing={aiInitializing} setView={setView} />;
+        case 'templates':
+          return <Templates setView={setView} />;
+        default:
+          return null;
+      }
+    })();
+    return viewContent ? <Suspense fallback={<ViewLoader />}>{viewContent}</Suspense> : null;
   };
 
   if (view === 'landing') {

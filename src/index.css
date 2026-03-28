@@ -180,3 +180,56 @@ body {
   max-height: 100%;
   object-fit: contain;
 }
+
+@media print {
+  body {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+    background: white !important;
+    color: black !important;
+  }
+
+  .glass, .glass-card, .glass-hover, .glass-input, .glass-modal, .glass-sidebar {
+    background: white !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+    border: 1px solid #ddd !important;
+    box-shadow: none !important;
+  }
+
+  .text-primary { color: #111 !important; }
+  .text-secondary { color: #555 !important; }
+  .text-tertiary { color: #888 !important; }
+  .text-success { color: #16a34a !important; }
+  .text-warning { color: #ca8a04 !important; }
+  .text-error { color: #dc2626 !important; }
+
+  .bg-primary, .bg-secondary, .bg-tertiary {
+    background: white !important;
+  }
+
+  button, .no-print {
+    display: none !important;
+  }
+
+  .glass-card {
+    break-inside: avoid;
+    margin-bottom: 20px;
+  }
+
+  h1, h2, h3, h4 {
+    color: black !important;
+  }
+
+  .prose {
+    color: #333 !important;
+  }
+
+  .prose a {
+    color: #0066cc !important;
+  }
+
+  .scrollbar-glass::-webkit-scrollbar {
+    display: none !important;
+  }
+}

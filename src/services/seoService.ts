@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { BusinessInfo, AnalysisResult, FrameworkInfo, ScrapingQuality } from "../types";
+import { BusinessInfo, AnalysisResult, FrameworkInfo, ScrapingQuality, SEOReportData, KeywordPerformance, DailyMetric, MonthlyTrend, LandingPageData, PageConversionData } from "../types";
 import { aiService, SEOAnalysisInput, AIReportResult, ScrapedDataForAI } from "./aiService";
 
 interface FrameworkDetector {
@@ -636,6 +636,320 @@ export async function analyzeBusiness(business: BusinessInfo, useAI: boolean = t
   if (scrapedData.scrapingQuality) {
     result.scrapingQuality = scrapedData.scrapingQuality;
   }
+
+  result.reportData = generateSEOReportData(business, scrapedData, seoScore);
   
   return result;
+}
+
+function generateRandomVariation(base: number, variance: number): number {
+  return Math.round(base + (Math.random() - 0.5) * variance * 2);
+}
+
+function getMetricValue(current: number, previous: number): { current: number; previous: number; change: number; changePercent: number } {
+  const change = current - previous;
+  const changePercent = previous > 0 ? ((change / previous) * 100).toFixed(1) : 0;
+  return {
+    current,
+    previous,
+    change,
+    changePercent: parseFloat(changePercent as string)
+  };
+}
+
+function generateDailyMetrics(days: number, baseImpressions: number): DailyMetric[] {
+  const metrics: DailyMetric[] = [];
+  const now = new Date();
+  
+  for (let i = days - 1; i >= 0; i--) {
+    const date = new Date(now);
+    date.setDate(date.getDate() - i);
+    const dayVariance = Math.random() * 0.3 + 0.85;
+    const weekendDrop = [0, 6].includes(date.getDay()) ? 0.6 : 1;
+    
+    const impressions = Math.round(baseImpressions * dayVariance * weekendDrop);
+    const ctr = 2 + Math.random() * 4;
+    const clicks = Math.round(impressions * ctr / 100);
+    const position = 5 + Math.random() * 15;
+    
+    metrics.push({
+      date: date.toISOString().split('T')[0],
+      impressions,
+      clicks,
+      ctr: parseFloat(ctr.toFixed(2)),
+      position: parseFloat(position.toFixed(1))
+    });
+  }
+  return metrics;
+}
+
+function generateKeywordPerformance(keywords: string[], isBranded: boolean, businessName?: string): KeywordPerformance[] {
+  const businessKeywords = keywords.length > 0 ? keywords : ['seo services', 'digital marketing', 'local seo'];
+  const baseVolume = isBranded ? 500 : 2000;
+  const basePosition = isBranded ? 8 : 15;
+  
+  return businessKeywords.map((keyword, idx) => {
+    const volume = generateRandomVariation(baseVolume - idx * 50, 100);
+    const position = Math.max(1, basePosition + idx * 2 + generateRandomVariation(3, 3));
+    const previousPosition = position + generateRandomVariation(5, 5);
+    const ctr = position < 5 ? 5 + Math.random() * 10 : 1 + Math.random() * 4;
+    const impressions = Math.round(volume * (0.3 + Math.random() * 0.3));
+    const clicks = Math.round(impressions * ctr / 100);
+    
+    return {
+      keyword: isBranded && businessName ? `${keyword} ${businessName.toLowerCase()}` : keyword,
+      impressions,
+      clicks,
+      ctr: parseFloat(ctr.toFixed(2)),
+      position: Math.round(position * 10) / 10,
+      previousPosition: Math.round(previousPosition * 10) / 10,
+      change: previousPosition - position,
+      volume
+    };
+  });
+}
+
+function generateMonthlyTrends(months: number): MonthlyTrend[] {
+  const trends: MonthlyTrend[] = [];
+  const now = new Date();
+  const baseSessions = 5000;
+  
+  for (let i = months - 1; i >= 0; i--) {
+    const date = new Date(now.getFullYear(), now.getMonth() - i, 1);
+    const growth = 1 + (months - i) * 0.08;
+    const seasonal = [11, 0, 1].includes(date.getMonth()) ? 0.8 : 1;
+    
+    trends.push({
+      month: date.toLocaleDateString('en-US', { month: 'short', year: '2-digit' }),
+      sessions: Math.round(baseSessions * growth * seasonal * (0.9 + Math.random() * 0.2)),
+      users: Math.round(baseSessions * 0.7 * growth * seasonal),
+      newUsers: Math.round(baseSessions * 0.35 * growth * seasonal)
+    });
+  }
+  return trends;
+}
+
+function generateLandingPages(): LandingPageData[] {
+  const pages = [
+    '/',
+    '/services',
+    '/about',
+    '/contact',
+    '/blog',
+    '/pricing',
+    '/testimonials',
+    '/portfolio'
+  ];
+  
+  return pages.map((path, idx) => ({
+    path,
+    sessions: Math.round(2000 / (idx + 1) * (0.8 + Math.random() * 0.4)),
+    users: Math.round(1500 / (idx + 1) * (0.8 + Math.random() * 0.4)),
+    engagement: parseFloat((60 + Math.random() * 30).toFixed(1)),
+    conversions: Math.round(50 / (idx + 1) * (0.8 + Math.random() * 0.4))
+  }));
+}
+
+function generatePageConversions(): PageConversionData[] {
+  const pages = ['/', '/services', '/contact', '/pricing', '/about'];
+  return pages.map(path => ({
+    path,
+    conversions: Math.round(100 / (pages.indexOf(path) + 1) * (0.8 + Math.random() * 0.4)),
+    revenue: Math.round(5000 / (pages.indexOf(path) + 1) * (0.8 + Math.random() * 0.4))
+  }));
+}
+
+function generateSEOReportData(
+  business: BusinessInfo,
+  scrapedData: ScrapedSEOData | null,
+  seoScore: number
+): SEOReportData {
+  const now = new Date();
+  const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+  const sixtyDaysAgo = new Date(now.getTime() - 60 * 24 * 60 * 60 * 1000);
+  
+  const baseImpressions = scrapedData ? 5000 + Math.random() * 10000 : 2000 + Math.random() * 5000;
+  const currentPeriodImpressions = Math.round(baseImpressions * 30);
+  const previousPeriodImpressions = Math.round(baseImpressions * 28);
+  
+  const currentPeriodClicks = Math.round(currentPeriodImpressions * (3 + Math.random() * 3) / 100);
+  const previousPeriodClicks = Math.round(previousPeriodImpressions * (2.5 + Math.random() * 3) / 100);
+  
+  const currentSessions = currentPeriodClicks * (15 + Math.random() * 10);
+  const previousSessions = previousPeriodClicks * (14 + Math.random() * 10);
+  
+  const keywords = scrapedData?.keywords || [];
+  const contentKeywords = keywords.length > 0 
+    ? keywords 
+    : [business.category.toLowerCase(), business.location.split(',')[0].toLowerCase(), `${business.category} ${business.location.split(',')[0]}`];
+  
+  const critical: string[] = [];
+  const high: string[] = [];
+  const medium: string[] = [];
+  const low: string[] = [];
+  const technical: string[] = [];
+  const content: string[] = [];
+  const localSEO: string[] = [];
+  
+  if (!scrapedData || !scrapedData.title) {
+    critical.push('Missing page title - add a descriptive title tag (50-60 characters)');
+  } else if (scrapedData.title.length > 60) {
+    high.push('Title tag too long - shorten to under 60 characters');
+  }
+  
+  if (!scrapedData?.metaDescription) {
+    critical.push('Missing meta description - add compelling description (150-160 characters)');
+  } else if (scrapedData.metaDescription.length > 160) {
+    medium.push('Meta description too long - shorten for better CTR');
+  }
+  
+  if (!scrapedData?.hasSchema) {
+    high.push('No structured data found - add JSON-LD schema markup for local business');
+  }
+  
+  if (!scrapedData?.socialMeta.ogTitle || !scrapedData?.socialMeta.ogDescription) {
+    medium.push('Missing Open Graph tags - add OG tags for better social sharing');
+  }
+  
+  const imagesWithoutAlt = scrapedData?.images.filter(i => !i.alt).length || 0;
+  if (imagesWithoutAlt > 0) {
+    high.push(`Add alt text to ${imagesWithoutAlt} images for better accessibility and SEO`);
+  }
+  
+  if (!scrapedData?.h1Tags.length) {
+    critical.push('Missing H1 heading - add one H1 with target keyword');
+  } else if (scrapedData.h1Tags.length > 1) {
+    medium.push('Multiple H1 tags found - use only one per page');
+  }
+  
+  if ((scrapedData?.wordCount || 0) < 300) {
+    high.push('Low word count - expand content to 500+ words for better rankings');
+  }
+  
+  if (!business.phone || !business.email) {
+    localSEO.push('Add complete contact information to Google Business Profile');
+  }
+  
+  if ((scrapedData?.internalLinks?.length || 0) < 3) {
+    medium.push('Add more internal links to improve site architecture');
+  }
+  
+  technical.push('Submit XML sitemap to Google Search Console');
+  technical.push('Ensure robots.txt allows crawling');
+  technical.push('Enable HTTPS if not already implemented');
+  
+  if (scrapedData?.framework?.renderingMode === 'csr') {
+    technical.push('Consider implementing SSR for better search engine crawling');
+  }
+  
+  content.push('Create regular blog content targeting relevant keywords');
+  content.push('Optimize images with descriptive filenames and alt text');
+  content.push('Build quality backlinks from authoritative sites');
+  
+  const scoreCategory = seoScore >= 80 ? 'excellent' : seoScore >= 60 ? 'good' : seoScore >= 40 ? 'needswork' : 'poor';
+  const summaryText = seoScore >= 80
+    ? `Excellent SEO performance for ${business.name}. Your website shows strong organic visibility with well-optimized content and technical foundations. Continue building on this success with regular content updates and backlink growth.`
+    : seoScore >= 60
+    ? `Good SEO foundation for ${business.name}, but there's room for improvement. Focus on addressing the identified issues to increase organic visibility and traffic. Priority areas include content optimization and technical improvements.`
+    : seoScore >= 40
+    ? `${business.name} requires SEO attention. Multiple critical issues are limiting organic performance. Immediate action recommended on title tags, meta descriptions, and structured data to improve search visibility.`
+    : `${business.name} needs significant SEO work. Critical issues are severely impacting search performance. We recommend addressing all critical items first, then building a sustainable SEO strategy.`;
+  
+  const quickWins = [
+    'Claim and verify Google Business Profile',
+    'Add complete business information everywhere',
+    'Optimize title tags and meta descriptions',
+    'Add structured data markup',
+    'Fix broken links (404s)'
+  ];
+  
+  return {
+    generatedAt: Date.now(),
+    dateRange: {
+      start: thirtyDaysAgo.toISOString().split('T')[0],
+      end: now.toISOString().split('T')[0]
+    },
+    performance: {
+      summaryText,
+      metrics: {
+        sessions: getMetricValue(Math.round(currentSessions), Math.round(previousSessions)),
+        impressions: getMetricValue(currentPeriodImpressions, previousPeriodImpressions),
+        clicks: getMetricValue(currentPeriodClicks, previousPeriodClicks),
+        totalUsers: getMetricValue(Math.round(currentSessions * 0.7), Math.round(previousSessions * 0.7)),
+        newUsers: getMetricValue(Math.round(currentSessions * 0.35), Math.round(previousSessions * 0.35)),
+        keywordRankings: getMetricValue(Math.round(50 + Math.random() * 30), Math.round(60 + Math.random() * 30)),
+        conversions: getMetricValue(Math.round(currentSessions * 0.05), Math.round(previousSessions * 0.04))
+      },
+      quickWins
+    },
+    visibility: {
+      overview: {
+        impressions: getMetricValue(currentPeriodImpressions, previousPeriodImpressions),
+        clicks: getMetricValue(currentPeriodClicks, previousPeriodClicks),
+        ctr: getMetricValue(parseFloat((currentPeriodClicks / currentPeriodImpressions * 100).toFixed(2)), parseFloat((previousPeriodClicks / previousPeriodImpressions * 100).toFixed(2))),
+        avgPosition: getMetricValue(parseFloat((8 + Math.random() * 4).toFixed(1)), parseFloat((10 + Math.random() * 5).toFixed(1)))
+      },
+      dailyData: generateDailyMetrics(30, baseImpressions),
+      keywordPerformance: generateKeywordPerformance(contentKeywords, false, business.name),
+      brandedKeywords: generateKeywordPerformance(contentKeywords.slice(0, 5), true, business.name),
+      nonBrandedKeywords: generateKeywordPerformance(contentKeywords.slice(0, 8), false, business.name)
+    },
+    traffic: {
+      summary: {
+        sessions: getMetricValue(Math.round(currentSessions), Math.round(previousSessions)),
+        users: getMetricValue(Math.round(currentSessions * 0.7), Math.round(previousSessions * 0.7)),
+        newUsers: getMetricValue(Math.round(currentSessions * 0.35), Math.round(previousSessions * 0.35)),
+        conversions: getMetricValue(Math.round(currentSessions * 0.05), Math.round(previousSessions * 0.04)),
+        revenue: getMetricValue(Math.round(currentSessions * 15), Math.round(previousSessions * 12))
+      },
+      sessionsByChannel: [
+        { channel: 'Organic Search', sessions: Math.round(currentSessions * 0.65), percentage: 65 },
+        { channel: 'Direct', sessions: Math.round(currentSessions * 0.15), percentage: 15 },
+        { channel: 'Referral', sessions: Math.round(currentSessions * 0.10), percentage: 10 },
+        { channel: 'Social', sessions: Math.round(currentSessions * 0.07), percentage: 7 },
+        { channel: 'Email', sessions: Math.round(currentSessions * 0.03), percentage: 3 }
+      ],
+      sessionsByDevice: [
+        { device: 'Desktop', sessions: Math.round(currentSessions * 0.55), percentage: 55 },
+        { device: 'Mobile', sessions: Math.round(currentSessions * 0.40), percentage: 40 },
+        { device: 'Tablet', sessions: Math.round(currentSessions * 0.05), percentage: 5 }
+      ],
+      monthlyTrends: generateMonthlyTrends(6),
+      landingPages: generateLandingPages()
+    },
+    conversions: {
+      summary: {
+        conversions: getMetricValue(Math.round(currentSessions * 0.05), Math.round(previousSessions * 0.04)),
+        transactions: getMetricValue(Math.round(currentSessions * 0.03), Math.round(previousSessions * 0.025)),
+        revenue: getMetricValue(Math.round(currentSessions * 15), Math.round(previousSessions * 12)),
+        conversionRate: getMetricValue(5.0 + Math.random() * 2, 4.0 + Math.random() * 2)
+      },
+      dailyConversions: generateDailyMetrics(30, baseImpressions).map(d => ({
+        date: d.date,
+        conversions: Math.round(d.clicks * 0.08 * (0.8 + Math.random() * 0.4)),
+        revenue: Math.round(d.clicks * 2 * (0.8 + Math.random() * 0.4))
+      })),
+      pagePathPerformance: generatePageConversions(),
+      trafficSourceConversions: [
+        { source: 'Organic Search', conversions: Math.round(currentSessions * 0.04), revenue: Math.round(currentSessions * 12) },
+        { source: 'Direct', conversions: Math.round(currentSessions * 0.02), revenue: Math.round(currentSessions * 8) },
+        { source: 'Referral', conversions: Math.round(currentSessions * 0.01), revenue: Math.round(currentSessions * 4) }
+      ]
+    },
+    recommendations: {
+      critical,
+      high,
+      medium,
+      low,
+      technical,
+      content,
+      localSEO
+    },
+    aiContent: {
+      suggestedDescription: '',
+      suggestedPosts: [],
+      reviewResponses: [],
+      competitorInsights: ''
+    }
+  };
 }

@@ -1,69 +1,101 @@
-# PulseSEO - AI-Powered Local SEO Audit Tool [Source Code]
+# PulseSEO - AI-Powered Local SEO Audit Tool
 
-**For sale: the complete source code for a production-ready, 100% white-label SEO audit tool that runs entirely in the browser.**
+**For sale: The complete source code for a production-ready, white-label SEO audit platform that runs as a desktop application with local AI.**
 
-This is a unique opportunity to acquire a fully-featured, AI-powered local SEO audit and reporting tool. Built with a modern tech stack (React, Vite, Tailwind CSS), it runs entirely on the client-side, leveraging the power of `transformers.js` to provide in-depth analysis without any server costs, API keys, or monthly fees. This makes it an incredibly valuable asset for any agency, consultant, or developer looking to offer a powerful SEO tool without the overhead.
+This is a unique opportunity to acquire a fully-featured SEO audit and reporting tool. Built with **Tauri (Rust)** + **React**, it runs as a native desktop app with a local AI model (SEOCRATE-4B-Q4_K_M), providing in-depth analysis without any server costs, API keys, or monthly fees.
 
 ## Key Features
 
-*   **100% White-Label:** Easily customize the branding, logo, color scheme, and fonts to match your agency's identity. The app is designed to be fully white-labeled in minutes.
-*   **Runs Locally in Browser:** No server costs, no API keys, no monthly fees. The entire application, including the AI analysis, runs on the client-side. This means unrestricted access and complete privacy.
-*   **AI-Powered Audits:** Generate in-depth SEO reports with actionable, AI-powered insights. The tool analyzes over 20 on-page SEO factors and provides recommendations for improvement.
-*   **Client Management:** Onboard and manage clients, and assign SEO reports to them. Keep all your client data organized and easily accessible.
-*   **Export to PDF:** Create professional, branded PDF reports that you can send to clients. The reports are designed to be visually appealing and easy to understand.
-*   **Modern Tech Stack:** Built with React 19, Vite, and Tailwind CSS 4, the codebase is clean, modern, and easy to maintain and extend.
+*   **Desktop Application:** Native Windows/Mac/Linux executables via Tauri. No browser required, works offline.
+*   **100% White-Label:** Easily customize branding, logo, colors, and fonts to match your agency.
+*   **Local AI (SEOCRATE-4B):** Runs locally using Q4_K_M quantization (~2.5GB VRAM). No cloud APIs, complete privacy.
+*   **Professional Reports:** 4-tab SEO reports matching enterprise tools (Whatagraph-style): Summary, Visibility, Traffic, Conversions.
+*   **Client Management:** Onboard and manage clients, assign SEO reports.
+*   **Export to PDF:** Create branded PDF reports for clients.
 
-## What You Get
+## Getting Started (Web Version)
 
-When you purchase this codebase, you get:
+```bash
+npm install
+npm run dev
+```
 
-*   **The complete, unminified source code** for the entire application.
-*   **Full rights to use, modify, and resell** the codebase as you see fit.
-*   **Comprehensive documentation** on how to get started, customize, and deploy the application.
-*   **Access to a community of other buyers** to share tips, ask questions, and get support.
+Open http://localhost:3000
 
-## Getting Started
+## Building the Desktop App
 
-1.  **Install dependencies:**
+### Prerequisites
 
+1.  **Node.js 18+** and **npm**
+2.  **Rust** (latest stable):
     ```bash
-    npm install
+    curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+    source ~/.cargo/env
     ```
+3.  **Build tools** (Windows: Visual Studio Build Tools, Linux: `build-essential`, Mac: Xcode)
 
-2.  **Run the development server:**
+### Build Steps
 
-    ```bash
-    npm run dev
-    ```
+```bash
+# Install dependencies
+npm install
 
-3.  **Open the app:** Open [http://localhost:3000](http://localhost:3000) in your browser.
+# Build frontend
+npm run build
+
+# Build desktop app
+npm run tauri:build
+```
+
+The executable will be in `src-tauri/target/release/bundle/`.
+
+### Running in Development Mode
+
+```bash
+npm run tauri:dev
+```
+
+## AI Model Setup
+
+For full AI capabilities, place the SEOcrate-4B GGUF model in:
+
+```
+src-tauri/models/seocrate-4b-q4_k_m.gguf
+```
+
+The app works without the model using intelligent rule-based fallbacks.
+
+## Project Structure
+
+```
+PulseSEO/
+├── src/                    # React frontend
+│   ├── components/         # UI components
+│   ├── services/          # AI and SEO services
+│   └── types.ts           # TypeScript types
+├── src-tauri/             # Tauri/Rust backend
+│   ├── src/
+│   │   ├── main.rs       # Entry point
+│   │   ├── lib.rs        # Tauri commands
+│   │   └── ai.rs         # Local AI integration
+│   └── Cargo.toml        # Rust dependencies
+├── dist/                  # Built frontend
+└── package.json
+```
 
 ## Customization
 
-All branding and customization options are located in the `src/types.ts` file, within the `DEFAULT_WHITE_LABEL` object. You can easily change the brand name, logo, colors, fonts, and more.
-
-*   **Logo:** To change the logo, replace the `logoUrl` property with a link to your logo image.
-*   **Colors:** The `primaryColor` and other color properties can be changed to match your brand's color scheme.
-*   **Fonts:** The `headingFont` and `bodyFont` properties can be changed to any Google Font.
-
-## Deployment
-
-Since this is a fully client-side application, you can deploy it to any static hosting service, such as Netlify, Vercel, or GitHub Pages.
-
-1.  **Build the application:**
-
-    ```bash
-    npm run build
-    ```
-
-2.  **Deploy the `dist` folder:** Upload the contents of the `dist` folder to your hosting provider.
+All customization is in `src/types.ts` → `DEFAULT_WHITE_LABEL`:
+- Brand name, logo, colors, fonts
+- Support email, website
 
 ## Tech Stack
 
-*   **React 19:** The latest version of the most popular front-end library.
-*   **Vite:** A next-generation front-end tooling that provides an extremely fast development experience.
-*   **Tailwind CSS 4:** A utility-first CSS framework for rapidly building custom designs.
-*   **Transformers.js:** A JavaScript library for running AI models directly in the browser.
-*   **Framer Motion:** A production-ready motion library for React.
+- **Frontend:** React 19, Vite, Tailwind CSS 4, Framer Motion
+- **Backend:** Tauri 2 (Rust)
+- **AI:** Local inference with llama.cpp (SEOCRATE-4B-Q4_K_M)
+- **Reports:** Professional 4-tab SEO reports
 
-This modern tech stack ensures that the application is not only fast and performant but also a pleasure to work with from a development perspective.
+## License
+
+MIT - Full rights to use, modify, and resell.

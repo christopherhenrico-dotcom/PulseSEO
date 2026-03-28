@@ -91,6 +91,161 @@ export interface ScrapingQuality {
   suggestedAction: string;
 }
 
+export interface SEOReportData {
+  generatedAt: number;
+  dateRange: {
+    start: string;
+    end: string;
+  };
+  performance: PerformanceSummary;
+  visibility: VisibilityData;
+  traffic: TrafficData;
+  conversions: ConversionData;
+  recommendations: SEORecommendations;
+  aiContent: AIGeneratedContent;
+}
+
+export interface PerformanceSummary {
+  summaryText: string;
+  metrics: {
+    sessions: MetricValue;
+    impressions: MetricValue;
+    clicks: MetricValue;
+    totalUsers: MetricValue;
+    newUsers: MetricValue;
+    keywordRankings: MetricValue;
+    conversions: MetricValue;
+  };
+  quickWins: string[];
+}
+
+export interface MetricValue {
+  current: number;
+  previous: number;
+  change: number;
+  changePercent: number;
+}
+
+export interface VisibilityData {
+  overview: {
+    impressions: MetricValue;
+    clicks: MetricValue;
+    ctr: MetricValue;
+    avgPosition: MetricValue;
+  };
+  dailyData: DailyMetric[];
+  keywordPerformance: KeywordPerformance[];
+  brandedKeywords: KeywordPerformance[];
+  nonBrandedKeywords: KeywordPerformance[];
+}
+
+export interface DailyMetric {
+  date: string;
+  impressions: number;
+  clicks: number;
+  ctr: number;
+  position: number;
+}
+
+export interface KeywordPerformance {
+  keyword: string;
+  impressions: number;
+  clicks: number;
+  ctr: number;
+  position: number;
+  previousPosition: number;
+  change: number;
+  volume: number;
+}
+
+export interface TrafficData {
+  summary: {
+    sessions: MetricValue;
+    users: MetricValue;
+    newUsers: MetricValue;
+    conversions: MetricValue;
+    revenue: MetricValue;
+  };
+  sessionsByChannel: ChannelData[];
+  sessionsByDevice: DeviceData[];
+  monthlyTrends: MonthlyTrend[];
+  landingPages: LandingPageData[];
+}
+
+export interface ChannelData {
+  channel: string;
+  sessions: number;
+  percentage: number;
+}
+
+export interface DeviceData {
+  device: string;
+  sessions: number;
+  percentage: number;
+}
+
+export interface MonthlyTrend {
+  month: string;
+  sessions: number;
+  users: number;
+  newUsers: number;
+}
+
+export interface LandingPageData {
+  path: string;
+  sessions: number;
+  users: number;
+  engagement: number;
+  conversions: number;
+}
+
+export interface ConversionData {
+  summary: {
+    conversions: MetricValue;
+    transactions: MetricValue;
+    revenue: MetricValue;
+    conversionRate: MetricValue;
+  };
+  dailyConversions: DailyConversion[];
+  pagePathPerformance: PageConversionData[];
+  trafficSourceConversions: SourceConversionData[];
+}
+
+export interface DailyConversion {
+  date: string;
+  conversions: number;
+  revenue: number;
+}
+
+export interface PageConversionData {
+  path: string;
+  conversions: number;
+  revenue: number;
+}
+
+export interface SourceConversionData {
+  source: string;
+  conversions: number;
+  revenue: number;
+}
+
+export interface SEORecommendations {
+  critical: string[];
+  high: string[];
+  medium: string[];
+  low: string[];
+  technical: string[];
+  content: string[];
+  localSEO: string[];
+}
+
+export interface AIGeneratedContent {
+  suggestedDescription: string;
+  suggestedPosts: string[];
+  reviewResponses: { review: string; response: string }[];
+  competitorInsights: string;
+}
+
 export interface AnalysisResult {
   seoScore: number;
   gmbOptimized: boolean;
@@ -105,6 +260,7 @@ export interface AnalysisResult {
   competitorInsights?: string;
   frameworkInfo?: FrameworkInfo;
   scrapingQuality?: ScrapingQuality;
+  reportData?: SEOReportData;
 }
 
 export interface Client {
