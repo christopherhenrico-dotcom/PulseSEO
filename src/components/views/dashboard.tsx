@@ -13,7 +13,8 @@ import {
   ShieldCheck,
   CheckCircle2,
   Users,
-  Upload
+  Upload,
+  Trash2
 } from 'lucide-react';
 import { AuditResult, Client, View } from '../../types';
 
@@ -22,6 +23,7 @@ interface DashboardProps {
   clients: Client[];
   setView: React.Dispatch<React.SetStateAction<View>>;
   setSelectedAudit: (audit: AuditResult) => void;
+  deleteAudit: (auditId: string) => void;
   exportToCSV: () => void;
   exportToJSON: () => void;
   getScoreColorClass: (score: number) => string;
@@ -32,11 +34,13 @@ export const Dashboard: React.FC<DashboardProps> = ({
   clients, 
   setView, 
   setSelectedAudit,
+  deleteAudit,
   exportToCSV,
   exportToJSON,
   getScoreColorClass
 }) => {
   const [showExportMenu, setShowExportMenu] = useState(false);
+  const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
 
   return (
     <motion.div
@@ -142,7 +146,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
               </div>
             ) : (
               audits.slice(0, 5).map(audit => (
-                <div key={audit.id} className="p-4 flex items-center justify-between hover:bg-white/[0.03] transition-colors cursor-pointer" onClick={() => { setSelectedAudit(audit); setView('report'); }}>
+                <div key={audit.id} className="p-4 flex items-center justify-between hover:bg-white/[0.03] transition-colors cursor-pointer group" onClick={() => { setSelectedAudit(audit); setView('report'); }}>
                   <div className="flex items-center gap-3">
                     <div className={`w-9 h-9 rounded-lg flex items-center justify-center font-semibold text-sm ${getScoreColorClass(audit.analysis.seoScore)}`}>
                       {audit.analysis.seoScore}
@@ -152,7 +156,16 @@ export const Dashboard: React.FC<DashboardProps> = ({
                       <p className="text-xs text-tertiary">{audit.business.category}</p>
                     </div>
                   </div>
-                  <div className="text-xs text-tertiary">{new Date(audit.timestamp).toLocaleDateString()}</div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs text-tertiary">{new Date(audit.timestamp).toLocaleDateString()}</span>
+                    <button
+                      onClick={(e) => { e.stopPropagation(); setDeleteConfirmId(audit.id); }}
+                      className="p-1.5 rounded-lg opacity-0 group-hover:opacity-100 hover:bg-red-500/10 text-tertiary hover:text-red-400 transition-all"
+                      title="Delete"
+                    >
+                      <Trash2 size={14} />
+                    </button>
+                  </div>
                 </div>
               ))
             )}
@@ -194,6 +207,39 @@ export const Dashboard: React.FC<DashboardProps> = ({
           </div>
         </div>
       </div>
+
+      {deleteConfirmId && (
+        <div className="fixed inset-0 glass-blur-overlay flex items-center justify-center z-50 p-4">
+          <div className="glass-modal rounded-2xl p-6 w-full max-w-sm space-y-4">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-full bg-red-500/20 flex items-center justify-center">
+                <Trash2 size={20} className="text-red-400" />
+              </div>
+              <div>
+                <h2 className="text-lg font-semibold text-primary">Delete Report</h2>
+                <p className="text-sm text-secondary">This action cannot be undone.</p>
+              </div>
+            </div>
+            <p className="text-sm text-secondary">
+              Are you sure you want to delete the report for <span className="font-medium text-primary">{audits.find(a => a.id === deleteConfirmId)?.business.name}</span>?
+            </p>
+            <div className="flex gap-3 pt-2">
+              <button 
+                onClick={() => setDeleteConfirmId(null)}
+                className="flex-1 py-2.5 rounded-xl glass-card text-secondary hover:text-primary transition-colors text-sm font-medium"
+              >
+                Cancel
+              </button>
+              <button 
+                onClick={() => { deleteAudit(deleteConfirmId); setDeleteConfirmId(null); }}
+                className="flex-1 py-2.5 rounded-xl bg-red-500 text-white hover:bg-red-600 transition-colors text-sm font-medium"
+              >
+                Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </motion.div>
   );
 }

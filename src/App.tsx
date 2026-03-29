@@ -245,6 +245,14 @@ export default function App() {
     setNewClient(DEFAULT_CLIENT);
   };
 
+  const deleteClient = (clientId: string) => {
+    setClients(clients.filter(c => c.id !== clientId));
+  };
+
+  const deleteAudit = (auditId: string) => {
+    setAudits(audits.filter(a => a.id !== auditId));
+  };
+
   const getScoreColorClass = (score: number) => {
     if (score >= 80) return 'text-green-500';
     if (score >= 60) return 'text-yellow-500';
@@ -261,7 +269,7 @@ export default function App() {
     const viewContent = (() => {
       switch (view) {
         case 'dashboard':
-          return <Dashboard audits={audits} clients={clients} setView={setView} setSelectedAudit={setSelectedAudit} exportToCSV={exportToCSV} exportToJSON={exportToJSON} getScoreColorClass={getScoreColorClass} />;
+          return <Dashboard audits={audits} clients={clients} setView={setView} setSelectedAudit={setSelectedAudit} deleteAudit={deleteAudit} exportToCSV={exportToCSV} exportToJSON={exportToJSON} getScoreColorClass={getScoreColorClass} />;
         case 'audit':
           return <AuditForm settings={settings} clients={clients} selectedClientId={selectedClientId} setSelectedClientId={setSelectedClientId} newBusiness={newBusiness} setNewBusiness={setNewBusiness} handleCreateAudit={handleCreateAudit} isAnalyzing={isAnalyzing} analysisError={analysisError} aiReady={aiReady} aiInitializing={aiInitializing} setView={setView} />;
         case 'settings':
@@ -269,13 +277,13 @@ export default function App() {
         case 'report':
           return <ReportView selectedAudit={selectedAudit!} settings={settings} setView={setView} />;
         case 'clients':
-          return <Clients clients={clients} addClient={addClient} newClient={newClient} setNewClient={setNewClient} />;
+          return <Clients clients={clients} addClient={addClient} deleteClient={deleteClient} newClient={newClient} setNewClient={setNewClient} />;
         case 'bulk':
           return <BulkAudit settings={settings} bulkBusinesses={bulkBusinesses} setBulkBusinesses={setBulkBusinesses} handleBulkAudit={handleBulkAudit} bulkProcessing={bulkProcessing} bulkProgress={bulkProgress} aiReady={aiReady} aiInitializing={aiInitializing} setView={setView} />;
         case 'templates':
           return <Templates setView={setView} />;
         case 'allreports':
-          return <AllReports audits={audits} setView={setView} setSelectedAudit={setSelectedAudit} getScoreColorClass={getScoreColorClass} />;
+          return <AllReports audits={audits} setView={setView} setSelectedAudit={setSelectedAudit} deleteAudit={deleteAudit} getScoreColorClass={getScoreColorClass} />;
         default:
           return null;
       }

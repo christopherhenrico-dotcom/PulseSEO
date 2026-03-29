@@ -5,18 +5,20 @@
 
 import React, { useState } from 'react';
 import { motion } from 'motion/react';
-import { Users, Plus, X } from 'lucide-react';
+import { Users, Plus, X, Trash2 } from 'lucide-react';
 import { Client } from '../../types';
 
 interface ClientsProps {
   clients: Client[];
   addClient: () => void;
+  deleteClient: (clientId: string) => void;
   newClient: Partial<Client>;
   setNewClient: (client: Partial<Client>) => void;
 }
 
-export const Clients: React.FC<ClientsProps> = ({ clients, addClient, newClient, setNewClient }) => {
+export const Clients: React.FC<ClientsProps> = ({ clients, addClient, deleteClient, newClient, setNewClient }) => {
   const [showClientModal, setShowClientModal] = useState(false);
+  const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
 
   return (
     <motion.div
@@ -67,9 +69,18 @@ export const Clients: React.FC<ClientsProps> = ({ clients, addClient, newClient,
                     {client.company && <p className="text-xs text-tertiary">{client.company}</p>}
                   </div>
                 </div>
-                <div className="text-right">
-                  <span className="text-xl font-bold text-primary">{client.totalAudits}</span>
-                  <p className="text-[10px] text-tertiary uppercase tracking-wider">audits</p>
+                <div className="flex items-center gap-4">
+                  <div className="text-right">
+                    <span className="text-xl font-bold text-primary">{client.totalAudits}</span>
+                    <p className="text-[10px] text-tertiary uppercase tracking-wider">audits</p>
+                  </div>
+                  <button
+                    onClick={() => setDeleteConfirmId(client.id)}
+                    className="p-2 rounded-lg hover:bg-red-500/10 text-tertiary hover:text-red-400 transition-colors"
+                    title="Delete client"
+                  >
+                    <Trash2 size={16} />
+                  </button>
                 </div>
               </div>
             </div>
@@ -124,6 +135,39 @@ export const Clients: React.FC<ClientsProps> = ({ clients, addClient, newClient,
             >
               Add Client
             </button>
+          </div>
+        </div>
+      )}
+
+      {deleteConfirmId && (
+        <div className="fixed inset-0 glass-blur-overlay flex items-center justify-center z-50 p-4">
+          <div className="glass-modal rounded-2xl p-6 w-full max-w-sm space-y-4">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-full bg-red-500/20 flex items-center justify-center">
+                <Trash2 size={20} className="text-red-400" />
+              </div>
+              <div>
+                <h2 className="text-lg font-semibold text-primary">Delete Client</h2>
+                <p className="text-sm text-secondary">This action cannot be undone.</p>
+              </div>
+            </div>
+            <p className="text-sm text-secondary">
+              Are you sure you want to delete <span className="font-medium text-primary">{clients.find(c => c.id === deleteConfirmId)?.name}</span>?
+            </p>
+            <div className="flex gap-3 pt-2">
+              <button 
+                onClick={() => setDeleteConfirmId(null)}
+                className="flex-1 py-2.5 rounded-xl glass-card text-secondary hover:text-primary transition-colors text-sm font-medium"
+              >
+                Cancel
+              </button>
+              <button 
+                onClick={() => { deleteClient(deleteConfirmId); setDeleteConfirmId(null); }}
+                className="flex-1 py-2.5 rounded-xl bg-red-500 text-white hover:bg-red-600 transition-colors text-sm font-medium"
+              >
+                Delete
+              </button>
+            </div>
           </div>
         </div>
       )}
