@@ -323,9 +323,9 @@ cd api && npm install && npm run dev
 
 ## Pricing
 
-**$2,000** — Full source code, all platforms, complete SaaS infrastructure, lifetime updates.
+**$2,500** — Full source code, all platforms, complete SaaS infrastructure, lifetime updates.
 
-### What's Included for $2,000:
+### What's Included for $2,500:
 - ✅ Complete React frontend (~4,900 lines)
 - ✅ Complete Node.js API backend (8 modules, 40+ endpoints)
 - ✅ Multi-tenant authentication system
