@@ -1,7 +1,7 @@
 {
-  "name": "pulseseo-desktop",
-  "version": "1.0.0",
-  "description": "PulseSEO Desktop - Enterprise SEO Audit Platform",
+  "name": "pulseseo",
+  "version": "2.0.0",
+  "description": "PulseSEO - Enterprise SEO Audit SaaS Platform",
   "main": "electron/main.js",
   "author": "PulseSEO Team",
   "license": "MIT",
@@ -9,9 +9,17 @@
   "scripts": {
     "dev": "vite --port=3000",
     "build": "vite build",
+    "preview": "vite preview",
     "build:desktop": "npm run build && electron-builder --win",
     "electron": "electron .",
-    "electron:dev": "npm run build && electron ."
+    "electron:dev": "npm run build && electron .",
+    "docker:build": "docker build -f Dockerfile.frontend -t pulseseo/frontend:latest .",
+    "docker:up": "docker-compose up -d",
+    "docker:down": "docker-compose down",
+    "api:dev": "cd api && npm run dev",
+    "api:build": "cd api && npm run build",
+    "deploy:staging": "kubectl apply -f infrastructure/kubernetes/ --namespace=pulseseo-staging",
+    "deploy:production": "kubectl apply -f infrastructure/kubernetes/ --namespace=pulseseo"
   },
   "build": {
     "appId": "com.pulseseo.app",

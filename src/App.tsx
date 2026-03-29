@@ -71,7 +71,7 @@ export default function App() {
     return safeJSONParse<AuditResult[]>('lp_audits', []);
   });
 
-  const [view, setView] = useState<'landing' | 'dashboard' | 'audit' | 'settings' | 'report' | 'clients' | 'bulk' | 'templates'>('landing');
+  const [view, setView] = useState<'landing' | 'dashboard' | 'audit' | 'settings' | 'report' | 'clients' | 'bulk' | 'templates' | 'allreports'>('landing');
   const [selectedAudit, setSelectedAudit] = useState<AuditResult | null>(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [analysisError, setAnalysisError] = useState<string | null>(null);
