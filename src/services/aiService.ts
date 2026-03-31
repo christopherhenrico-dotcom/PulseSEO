@@ -62,21 +62,18 @@ class AIService {
 
     const init = async () => {
       if (!pipeline) {
-        console.log('AI: Rule-based mode');
+
         this.isInitialized = true;
         return;
       }
 
       try {
-        console.log('Initializing local AI model...');
-        
         this.generator = await pipeline('text-generation', 'Xenova/distilgpt2', {
           device: 'webgpu',
           dtype: 'q4',
         });
         
         this.isInitialized = true;
-        console.log('Local AI ready!');
       } catch (e) {
         console.warn('WebGPU failed, trying CPU:', e);
         try {
@@ -84,7 +81,6 @@ class AIService {
             device: 'cpu',
           });
           this.isInitialized = true;
-          console.log('Local AI ready (CPU mode)');
         } catch (e2) {
           console.error('AI init failed:', e2);
           this.isInitialized = true;

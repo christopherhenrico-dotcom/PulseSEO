@@ -5,9 +5,8 @@
 
 import React, { useState, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import Markdown from 'react-markdown';
 import { 
-  ChevronRight, Share2, ShieldCheck, AlertCircle, Globe, Zap, Mail, 
+  ChevronRight, ShieldCheck, AlertCircle, Globe, Zap, Mail, 
   TrendingUp, TrendingDown, Minus, Eye, MousePointer, Target, Users,
   DollarSign, BarChart3, Search, ArrowUpRight, ArrowDownRight, Activity,
   Layers, PieChart, LineChart, Download

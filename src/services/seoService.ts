@@ -429,7 +429,6 @@ export async function getPageSpeedData(url: string): Promise<PageSpeedData | nul
       speedRecommendations: recommendations.slice(0, 5)
     };
 
-    console.log("PageSpeed data retrieved:", result.performanceScore);
     return result;
   } catch (error) {
     console.error("PageSpeed API failed:", error);

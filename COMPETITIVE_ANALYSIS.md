@@ -25,7 +25,7 @@ PulseSEO (SPA — React Router)
 │   ├── Features Section (6 feature cards)
 │   ├── How It Works (3-step process)
 │   ├── Testimonials (3 agency testimonials)
-│   ├── Pricing ($2,500 one-time)
+│       ├── Pricing ($500 one-time)
 │   └── Footer (GitHub, Support)
 │
 ├── Dashboard (Authenticated Shell)
@@ -462,7 +462,7 @@ API Response → Frontend renders dashboard
 |---------|----------|-------------------|
 | **Hero Section** | Gradient text headline, animated blob backgrounds, dual CTA (Demo + Pricing) | Similar (Semrush: video hero; BrightLocal: product screenshot) |
 | **Social Proof** | 3 hardcoded testimonials | Dynamic testimonials, case studies, logos, G2/Capterra ratings |
-| **Pricing** | Single tier ($2,500 one-time) | Multi-tier monthly/annual with comparison table |
+| **Pricing** | Single tier ($500 one-time) | Multi-tier monthly/annual with comparison table |
 | **Feature Showcase** | 6 icon cards with gradient backgrounds | Interactive product tours, video demos |
 | **Demo/CTA** | Direct navigation to dashboard | Free trial signup, demo booking form |
 | **Navigation** | Sticky header with theme toggle | Sticky header with login/signup, language selector |
@@ -583,13 +583,13 @@ Competitors use established UI libraries (Material UI, Ant Design, custom design
 
 | Model | PulseSEO | SE Ranking | BrightLocal | Semrush |
 |-------|----------|------------|-------------|---------|
-| **Pricing Model** | One-time purchase ($2,500) | Monthly subscription ($39-189/mo) | Monthly subscription ($29-79/mo) | Monthly subscription ($130-500/mo) |
+| **Pricing Model** | One-time purchase ($500) | Monthly subscription ($39-189/mo) | Monthly subscription ($29-79/mo) | Monthly subscription ($130-500/mo) |
 | **Free Tier** | Full product (no auth) | 14-day trial | 14-day trial | Limited free tier |
 | **Revenue Type** | Source code license | SaaS recurring | SaaS recurring | SaaS recurring |
 | **Target Customer** | Developers, agencies wanting to own the tool | Agencies, in-house teams | Local SEO agencies | Enterprise, agencies |
 | **White-Label** | Included | $50/mo add-on | Included in all plans | Enterprise only |
-| **Total Cost (Year 1)** | $2,500 | $468-2,268 | $348-948 | $1,560-6,000 |
-| **Total Cost (Year 3)** | $2,500 | $1,404-6,804 | $1,044-2,844 | $4,680-18,000 |
+| **Total Cost (Year 1)** | $500 | $468-2,268 | $348-948 | $1,560-6,000 |
+| **Total Cost (Year 3)** | $500 | $1,404-6,804 | $1,044-2,844 | $4,680-18,000 |
 
 **Analysis:** PulseSEO breaks even vs. competitors in 1-2 years for solo users, immediately for agencies. The one-time model is compelling for cost-conscious buyers but eliminates recurring revenue for the seller.
 
@@ -687,7 +687,7 @@ Competitors use established UI libraries (Material UI, Ant Design, custom design
           ($29-79/mo)     |
                           |
                           |
-                    PulseSEO ★ ($2,500 one-time)
+                     PulseSEO ★ ($500 one-time)
                     [Local AI | Privacy | Speed]
                           |
                           |

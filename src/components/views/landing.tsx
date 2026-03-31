@@ -5,7 +5,7 @@
 
 import React from 'react';
 import { motion } from 'motion/react';
-import { CheckCircle, DollarSign, GitBranch, LifeBuoy, Users, Zap, Rocket, BarChart3, FileText, Shield, Globe, Sparkles, ArrowRight, Star, Sun, Moon } from 'lucide-react';
+import { CheckCircle, DollarSign, Users, Zap, Rocket, BarChart3, FileText, Shield, Globe, Sparkles, ArrowRight, Star, Sun, Moon } from 'lucide-react';
 import { WhiteLabelSettings, View } from '../../types';
 import { LogoIcon, SmallLogoIcon } from '../common';
 import { Theme } from '../../services/theme';
@@ -274,7 +274,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ settings, logoPreview,
               </div>
 
               <div className="flex items-baseline justify-center gap-2 mb-8">
-                <span className="text-5xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">$2,500</span>
+                <span className="text-5xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">$500</span>
                 <span className="text-lg text-gray-500">one-time</span>
               </div>
 
@@ -298,7 +298,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ settings, logoPreview,
               </ul>
 
               <a href="https://github.com/christopherhenrico-dotcom/PulseSEO" target="_blank" rel="noopener noreferrer" className="block w-full text-center px-8 py-4 rounded-2xl hover:opacity-90 transition-all text-lg font-semibold bg-gradient-to-r from-purple-600 to-pink-600 text-white shadow-xl shadow-purple-500/25">
-                Buy Now - $2,500
+                Buy Now - $500
               </a>
               
               <p className="text-center text-sm text-gray-500 mt-4">
