@@ -323,7 +323,7 @@ cd api && npm install && npm run dev
 
 ## Pricing
 
-**$2,500** — Full source code, all platforms, complete SaaS infrastructure, lifetime updates.
+**$500** — Full source code, all platforms, complete SaaS infrastructure, lifetime updates.
 
 ### What's Included for $2,500:
 - ✅ Complete React frontend (~4,900 lines)
